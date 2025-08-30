@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">HabitGame</string>
+    <string name="email">Email</string>
+    <string name="username">Korisnicko ime</string>
+    <string name="password">Lozinka</string>
+    <string name="confirm_password">Potvrdi lozinku</string>
+    <string name="choose_avatar">Izaberite avatara</string>
+    <string name="register">Registruj se</string>
+    <string name="login">Prijavi se</string>
+
+    <string name="email_hint">Unesite Email</string>
+    <string name="username_hint">Unesite korisnicko ime</string>
+    <string name="password_hint">Unesite lozinka</string>
+    <string name="confirm_password_hint">Potvrdite lozinku</string>
+</resources>
