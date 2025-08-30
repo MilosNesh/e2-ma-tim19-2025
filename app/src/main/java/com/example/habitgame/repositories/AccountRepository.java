@@ -85,6 +85,31 @@ public class AccountRepository {
         return taskCompletionSource.getTask();
     }
 
+    public Task<Account> selectByEmail(String email){
+        TaskCompletionSource<Account> taskCompletionSource = new TaskCompletionSource<>();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("accounts")
+                .whereEqualTo("email", email)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
+                        Account account = document.toObject(Account.class);
+                        taskCompletionSource.setResult(account);
+                    } else {
+                        Log.d("NoUserFound", "Nema korisnika sa tim emailom");
+                        taskCompletionSource.setException(new Exception("Nema korisnika sa tim emailom."));
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirebaseError", "Greška prilikom pretrage korisnika: ", e);
+                    taskCompletionSource.setException(e);
+                });
+        return taskCompletionSource.getTask();
+    }
+
     public static void deleteAll(){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
