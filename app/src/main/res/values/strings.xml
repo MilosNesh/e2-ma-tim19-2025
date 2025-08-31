@@ -10,6 +10,14 @@
 
     <string name="email_hint">Unesite Email</string>
     <string name="username_hint">Unesite korisnicko ime</string>
-    <string name="password_hint">Unesite lozinka</string>
+    <string name="password_hint">Unesite lozinku</string>
     <string name="confirm_password_hint">Potvrdite lozinku</string>
+    <string name="badges">Bedzevi</string>
+    <string name="pp">PP</string>
+    <string name="xp">XP</string>
+    <string name="equipment">Oprema</string>
+    <string name="chage_password">Promjeni lozinku</string>
+    <string name="old_password">Stara lozinka</string>
+    <string name="new_password">Nova lozinka</string>
+    <string name="confirm_new_password">Potvrdite novu lozinku</string>
 </resources>

@@ -16,6 +16,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AccountRepository {
     public static void initDB(){
 
@@ -123,6 +126,32 @@ public class AccountRepository {
                     }
                 })
                 .addOnFailureListener(e -> Log.w("REZ_DB", "Error fetching accounts.", e));
+
+    }
+
+    public static void update(Account account){
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("accounts")
+                .whereEqualTo("email", account.getEmail())
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        DocumentReference docRef = doc.getReference();
+
+                        Map<String, Object> updates = new HashMap<>();
+                        updates.put("password", account.getPassword());
+
+                        docRef.update(updates)
+                                .addOnSuccessListener(aVoid ->
+                                        Log.d("REZ_DB", "Successfully updated user: " + account.getEmail()))
+                                .addOnFailureListener(e ->
+                                        Log.w("REZ_DB", "Error updating user: " + account.getEmail(), e));
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.w("REZ_DB", "Error querying username: " + account.getEmail(), e);
+                });
 
     }
 }

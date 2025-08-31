@@ -16,44 +16,27 @@
         android:padding="20dp"
         >
 
-        <TextView
-            android:id="@+id/email_label"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="@string/email"
-            android:textSize="16sp" />
-
         <EditText
             android:id="@+id/email"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ems="1"
-            android:inputType="textEmailAddress" />
-
-        <TextView
-            android:id="@+id/password_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textSize="16sp"
-            android:text="@string/password" />
+            android:inputType="textEmailAddress"
+            android:hint="@string/email_hint"/>
 
         <EditText
             android:id="@+id/password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ems="10"
-            android:inputType="textPassword" />
+            android:inputType="textPassword"
+            android:hint="@string/password_hint"
+            android:layout_marginTop="16dp"/>
 
         <Button
             android:id="@+id/login_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:textSize="16sp"
-            android:text="@string/login" />
+            android:text="@string/login"
+            android:layout_marginTop="16dp"/>
     </LinearLayout>
 </RelativeLayout>

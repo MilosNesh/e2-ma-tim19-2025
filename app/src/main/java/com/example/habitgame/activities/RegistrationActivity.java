@@ -2,6 +2,7 @@ package com.example.habitgame.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -9,14 +10,24 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.Button;
 import android.widget.AdapterView;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.habitgame.R;
 import com.example.habitgame.adapters.AvatarAdapter;
 import com.example.habitgame.databinding.ActivityRegistrationBinding;
 import com.example.habitgame.model.Account;
+import com.example.habitgame.model.Equipment;
 import com.example.habitgame.repositories.AccountRepository;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RegistrationActivity extends AppCompatActivity {
     private ActivityRegistrationBinding binding;
@@ -113,11 +124,130 @@ public class RegistrationActivity extends AppCompatActivity {
         // Proceed with registration (save to database, etc.)
 //        Toast.makeText(this, "Registration successful!", Toast.LENGTH_SHORT).show();
 
-        Account account = new Account(username, email, password, selectedAvatar);
+        Account account = new Account(username, email, password, avatars[selectedAvatar]);
 
         AccountRepository.insert(account);
 
         Intent intent = new Intent(RegistrationActivity.this, LoginActivity.class);
         startActivity(intent);
+    }
+    private void addEquipments(){
+        List<Equipment> equipmentList = new ArrayList<>();
+
+        // Dodaj napitke
+        equipmentList.add(new Equipment(
+                "Napitak za jednokratnu snagu 20%",
+                "napitak",
+                "Povecava snagu za 20%",
+                1.2,
+                1,
+                false,
+                "potion1",
+                0
+        ));
+
+        equipmentList.add(new Equipment(
+                "Napitak za jednokratnu snagu 40%",
+                "napitak",
+                "Povećava snagu za 40%",
+                1.4,
+                1,
+                false,
+                "potion2",
+                0
+        ));
+
+        equipmentList.add(new Equipment(
+                "Napitak za trajno povećanje snage 5%",
+                "napitak",
+                "Povećava snagu za 5% trajno",
+                1.05,
+                -1,
+                false,
+                "potion3",
+                0
+        ));
+
+        equipmentList.add(new Equipment(
+                "Napitak za trajno povećanje snage 10%",
+                "napitak",
+                "Povećava snagu za 10% trajno",
+                1.1,
+                -1,
+                false,
+                "potion4",
+                0
+        ));
+
+        // Dodaj odeću
+        equipmentList.add(new Equipment(
+                "Rukavice",
+                "odeca",
+                "Povećava snagu za 10%",
+                1.1,
+                2,
+                false,
+                "gloves",
+                0
+        ));
+
+        equipmentList.add(new Equipment(
+                "Stit",
+                "odeca",
+                "Povećava šansu za napad za 10%",
+                1.1,
+                2,
+                false,
+                "shield",
+                0
+        ));
+
+        equipmentList.add(new Equipment(
+                "Cizme",
+                "odeca",
+                "Povećava broj napada za 40%",
+                1.4,
+                2,
+                false,
+                "boots",
+                0
+        ));
+
+        // Dodaj oružje
+        equipmentList.add(new Equipment(
+                "Mac",
+                "oruzje",
+                "Povećava snagu za 5% trajno",
+                1.05,
+                -1,
+                false,
+                "sword",
+                0
+        ));
+
+        equipmentList.add(new Equipment(
+                "Luk i strela",
+                "oruzje",
+                "Povećava procenat novca od nagrade za 5%",
+                1.05,
+                -1,
+                false,
+                "bow",
+                0
+        ));
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        for(Equipment e: equipmentList){
+            db.collection("equipments")
+                    .add(e)
+                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                        @Override
+                        public void onSuccess(DocumentReference documentReference) {
+                            Log.d("REZ_DB", "DocumentSnapshot added with ID: " + documentReference.getId());
+                        }
+                    });
+        }
+
     }
 }
