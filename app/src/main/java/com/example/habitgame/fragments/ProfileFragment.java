@@ -80,7 +80,7 @@ public class ProfileFragment extends Fragment {
         xp = binding.xp;
         coins = binding.coins;
         badgeLabel = binding.badgesLabel;
-        changePassword = binding.changePassword;
+//        changePassword = binding.changePassword;
 
         if (email != null && !email.isEmpty()) {
             AccountRepository accountRepository = new AccountRepository();
@@ -106,15 +106,15 @@ public class ProfileFragment extends Fragment {
                     });
         }
 
-        changePassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.mainContainer, new ChangePasswordFragment());
-                transaction.addToBackStack(null);
-                transaction.commit();
-            }
-        });
+//        changePassword.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
+//                transaction.replace(R.id.mainContainer, new ChangePasswordFragment());
+//                transaction.addToBackStack(null);
+//                transaction.commit();
+//            }
+//        });
     }
 
     private void setBudges(Account account){

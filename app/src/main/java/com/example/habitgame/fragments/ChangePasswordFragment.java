@@ -2,10 +2,14 @@ package com.example.habitgame.fragments;
 
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.NavigationUI;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +23,7 @@ import com.example.habitgame.databinding.FragmentChangePasswordBinding;
 import com.example.habitgame.databinding.FragmentProfileBinding;
 import com.example.habitgame.model.Account;
 import com.example.habitgame.repositories.AccountRepository;
+import com.google.android.material.navigation.NavigationView;
 
 
 public class ChangePasswordFragment extends Fragment {
@@ -26,7 +31,8 @@ public class ChangePasswordFragment extends Fragment {
     private FragmentChangePasswordBinding binding;
     private EditText oldPasswordEditText, newPasswordEditText, confirmNewPasswordEditText;
     private Button changePasswordButton;
-
+    private NavigationView navigationView;
+    private NavController navController;
     private Account account;
     @Nullable
     @Override
@@ -48,12 +54,19 @@ public class ChangePasswordFragment extends Fragment {
                     }
                 });
 
-        changePasswordButton.setOnClickListener(v -> changePassword());
+        changePasswordButton.setOnClickListener(v -> changePassword(view));
+
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Navigation.findNavController(view).popBackStack();
+            }
+        });
 
         return view;
     }
 
-    private void changePassword() {
+    private void changePassword(View view) {
         String oldPassword = oldPasswordEditText.getText().toString();
         String newPassword = newPasswordEditText.getText().toString();
         String confirmPassword = confirmNewPasswordEditText.getText().toString();
@@ -71,9 +84,7 @@ public class ChangePasswordFragment extends Fragment {
         account.setPassword(newPassword);
         AccountRepository.update(account);
 
-        FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.mainContainer, new ProfileFragment());
-        transaction.commit();
+        Navigation.findNavController(view).popBackStack();
 
     }
 

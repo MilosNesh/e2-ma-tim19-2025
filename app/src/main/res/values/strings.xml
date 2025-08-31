@@ -20,4 +20,8 @@
     <string name="old_password">Stara lozinka</string>
     <string name="new_password">Nova lozinka</string>
     <string name="confirm_new_password">Potvrdite novu lozinku</string>
+    <string name="profile">Profil</string>
+    <string name="logout">Odjavi se</string>
+    <string name="navigation_drawer_open" translatable="false">Navigation Drawer Open</string>
+    <string name="navigation_drawer_close" translatable="false">Navigation Drawer Close</string>
 </resources>
