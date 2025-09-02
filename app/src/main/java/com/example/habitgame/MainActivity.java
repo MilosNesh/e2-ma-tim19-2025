@@ -57,13 +57,6 @@ public class MainActivity extends AppCompatActivity {
         actionBarDrawerToggle.syncState();
 
 
-        // Ako prvi put pokrećemo aktivnost
-//        if (savedInstanceState == null) {
-//            getSupportFragmentManager().beginTransaction()
-//                    .replace(R.id.mainContainer, ProfileFragment.newInstance("neskovic.milos02@gmail.com"))
-//                    .commit();
-//        }
-
         navController = Navigation.findNavController(this, R.id.mainContainer);
         NavigationUI.setupWithNavController(navigationView, navController);
 

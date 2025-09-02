@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">HabitGame</string>
+    <string name="app_name">Habit Game</string>
     <string name="email">Email</string>
     <string name="username">Korisnicko ime</string>
     <string name="password">Lozinka</string>

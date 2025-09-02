@@ -10,6 +10,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -25,20 +27,39 @@ public class AccountRepository {
     }
 
     public static void insert(Account account){
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        db.collection("accounts")
-                .add(account)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.d("REZ_DB", "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w("REZ_DB", "Error adding document", e);
+        // Kreiraj korisnika putem Firebase Authentication
+        mAuth.createUserWithEmailAndPassword(account.getEmail(), account.getPassword())
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser(); // Sada je korisnik autentifikovan
+
+                        if (user != null && !user.isEmailVerified()) {
+                            // Pošaljite verifikacioni email
+                            user.sendEmailVerification()
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d("EMAIL", "Verifikacioni email poslat.");
+
+                                        // Sada dodaj korisnika u Firestore nakon uspešnog slanja emaila
+                                        account.setIsVerified(false); // inicijalno nije verifikovan
+                                        account.setRegistrationTimestamp(System.currentTimeMillis()); // trenutno vreme
+
+                                        db.collection("accounts")
+                                                .add(account)
+                                                .addOnSuccessListener(documentReference -> {
+                                                    Log.d("REZ_DB", "DocumentSnapshot added with ID: " + documentReference.getId());
+                                                })
+                                                .addOnFailureListener(e -> Log.w("REZ_DB", "Error adding document", e));
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e("EMAIL", "Greška prilikom slanja emaila.", e);
+                                    });
+                        }
+                    } else {
+                        // Greška prilikom kreiranja korisnika
+                        Log.e("AUTH", "Greška prilikom kreiranja korisnika", task.getException());
                     }
                 });
     }
@@ -154,4 +175,34 @@ public class AccountRepository {
                 });
 
     }
+
+    public static void updateIsVerified(String email, boolean verified) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("accounts")
+                .whereEqualTo("email", email)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        doc.getReference().update("isVerified", verified)
+                                .addOnSuccessListener(aVoid -> Log.d("REZ_DB", "isVerified updated"))
+                                .addOnFailureListener(e -> Log.e("REZ_DB", "Failed to update isVerified", e));
+                    }
+                });
+    }
+
+    public static void deleteByEmail(String email) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("accounts")
+                .whereEqualTo("email", email)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        doc.getReference().delete()
+                                .addOnSuccessListener(aVoid -> Log.d("REZ_DB", "Account deleted due to expired link."))
+                                .addOnFailureListener(e -> Log.e("REZ_DB", "Failed to delete expired account.", e));
+                    }
+                });
+    }
+
 }

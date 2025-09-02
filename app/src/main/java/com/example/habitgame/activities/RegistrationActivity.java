@@ -20,6 +20,7 @@ import com.example.habitgame.databinding.ActivityRegistrationBinding;
 import com.example.habitgame.model.Account;
 import com.example.habitgame.model.Equipment;
 import com.example.habitgame.repositories.AccountRepository;
+import com.example.habitgame.services.AccountService;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
@@ -40,6 +41,7 @@ public class RegistrationActivity extends AppCompatActivity {
     private Integer[] avatars;
     private int selectedAvatar = -1; // Default: no avatar selected
 
+    private AccountService accountService;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,6 +68,8 @@ public class RegistrationActivity extends AppCompatActivity {
         if (FirebaseApp.getApps(this).isEmpty()) {
             FirebaseApp.initializeApp(this);
         }
+
+        accountService = new AccountService();
     }
 
     @Override
@@ -88,7 +92,14 @@ public class RegistrationActivity extends AppCompatActivity {
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                handleRegistration();
+                Account account = new Account(usernameEditText.getText().toString().trim(), emailEditText.getText().toString().trim(), passwordEditText.getText().toString().trim(), selectedAvatar);
+                String registration = accountService.register(account, confirmPasswordEditText.getText().toString().trim(), selectedAvatar);
+                Toast.makeText(RegistrationActivity.this, registration, Toast.LENGTH_SHORT).show();
+
+                if (registration.equals("Uspjesna registracija")) {
+                    Intent intent = new Intent(RegistrationActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                }
             }
         });
 
@@ -100,37 +111,7 @@ public class RegistrationActivity extends AppCompatActivity {
             }
         });
     }
-    private void handleRegistration() {
-        String email = emailEditText.getText().toString().trim();
-        String username = usernameEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString().trim();
-        String confirmPassword = confirmPasswordEditText.getText().toString().trim();
 
-        if (email.isEmpty() || username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
-            Toast.makeText(this, "Sva polja su obavezna!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (!password.equals(confirmPassword)) {
-            Toast.makeText(this, "Lozinke se ne podudaraju!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (selectedAvatar == -1) {
-            Toast.makeText(this, "Izaberite avatara!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Proceed with registration (save to database, etc.)
-//        Toast.makeText(this, "Registration successful!", Toast.LENGTH_SHORT).show();
-
-        Account account = new Account(username, email, password, avatars[selectedAvatar]);
-
-        AccountRepository.insert(account);
-
-        Intent intent = new Intent(RegistrationActivity.this, LoginActivity.class);
-        startActivity(intent);
-    }
     private void addEquipments(){
         List<Equipment> equipmentList = new ArrayList<>();
 

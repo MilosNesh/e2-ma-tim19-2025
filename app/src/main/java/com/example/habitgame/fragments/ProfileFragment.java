@@ -21,8 +21,10 @@ import com.example.habitgame.R;
 import com.example.habitgame.activities.LoginActivity;
 import com.example.habitgame.databinding.FragmentProfileBinding;
 import com.example.habitgame.model.Account;
+import com.example.habitgame.model.AccountCallback;
 import com.example.habitgame.model.Equipment;
 import com.example.habitgame.repositories.AccountRepository;
+import com.example.habitgame.services.AccountService;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -38,9 +40,10 @@ public class ProfileFragment extends Fragment {
     private ImageView avatar;
     private TextView username, levelAndTitle, pp, xp, coins, badgeLabel;
     private Button changePassword;
-
+    private Account account;
+    private AccountService accountService;
     public ProfileFragment() {
-        // Required empty public constructor
+
     }
 
     public static ProfileFragment newInstance(String param1) {
@@ -82,30 +85,25 @@ public class ProfileFragment extends Fragment {
         badgeLabel = binding.badgesLabel;
 //        changePassword = binding.changePassword;
 
-        if (email != null && !email.isEmpty()) {
-            AccountRepository accountRepository = new AccountRepository();
-            accountRepository.selectByEmail(email)
-                    .addOnSuccessListener(account -> {
-                        if (getContext() != null) {
-                            avatar.setImageResource(account.getAvatar());
-                            username.setText(account.getUsername());
-                            levelAndTitle.setText("Lvl " + account.getLevel() + " ~ " + account.getTitle());
-                            pp.setText(String.valueOf(account.getPowerPoints()));
-                            xp.setText(String.valueOf(account.getExperiencePoints()));
-                            coins.setText(String.valueOf(account.getCoins()));
+        accountService = new AccountService();
+        accountService.getAccountByEmail(email, new AccountCallback() {
+            @Override
+            public void onResult(Account a) {
+                account = a;
+                avatar.setImageResource(account.getAvatar());
+                username.setText(account.getUsername());
+                levelAndTitle.setText("Lvl " + account.getLevel() + " ~ " + account.getTitle());
+                pp.setText(String.valueOf(account.getPowerPoints()));
+                xp.setText(String.valueOf(account.getExperiencePoints()));
+                coins.setText(String.valueOf(account.getCoins()));
 
-                            String bl = "Bedzevi: " + account.getBadgeNumbers();
-                            badgeLabel.setText(bl);
-                            setBudges(account);
-                            setEquipments(account);
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e("Error", "Neuspješno dohvaćanje accounta", e);
-                        Toast.makeText(getContext(), "Greška prilikom učitavanja korisničkog naloga.", Toast.LENGTH_SHORT).show();
-                    });
-        }
-
+                String bl = "Bedzevi: " + account.getBadgeNumbers();
+                badgeLabel.setText(bl);
+                setBudges(account);
+                setEquipments(account);
+            }
+        });
+        
 //        changePassword.setOnClickListener(new View.OnClickListener() {
 //            @Override
 //            public void onClick(View view) {

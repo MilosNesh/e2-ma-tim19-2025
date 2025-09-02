@@ -15,6 +15,8 @@ public class Account {
     private int coins;
     private int badgeNumbers;
     private List<Equipment> equipments;
+    private boolean isVerified;
+    private long registrationTimestamp;
     public Account(){
     }
 
@@ -118,5 +120,21 @@ public class Account {
 
     public void setEquipments(List<Equipment> equipments) {
         this.equipments = equipments;
+    }
+
+    public boolean getIsVerified() {
+        return isVerified;
+    }
+
+    public void setIsVerified(boolean verified) {
+        isVerified = verified;
+    }
+
+    public long getRegistrationTimestamp() {
+        return registrationTimestamp;
+    }
+
+    public void setRegistrationTimestamp(long registrationTimestamp) {
+        this.registrationTimestamp = registrationTimestamp;
     }
 }

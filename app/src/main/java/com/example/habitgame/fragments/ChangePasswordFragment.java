@@ -22,7 +22,9 @@ import com.example.habitgame.R;
 import com.example.habitgame.databinding.FragmentChangePasswordBinding;
 import com.example.habitgame.databinding.FragmentProfileBinding;
 import com.example.habitgame.model.Account;
+import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.repositories.AccountRepository;
+import com.example.habitgame.services.AccountService;
 import com.google.android.material.navigation.NavigationView;
 
 
@@ -34,6 +36,8 @@ public class ChangePasswordFragment extends Fragment {
     private NavigationView navigationView;
     private NavController navController;
     private Account account;
+
+    private AccountService accountService;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -53,8 +57,20 @@ public class ChangePasswordFragment extends Fragment {
                         this.account = account;
                     }
                 });
+        accountService = new AccountService();
 
-        changePasswordButton.setOnClickListener(v -> changePassword(view));
+        changePasswordButton.setOnClickListener(v -> {
+            accountService.changePassword("neskovic.milos02@gmail.com", oldPasswordEditText.getText().toString(), newPasswordEditText.getText().toString(), confirmNewPasswordEditText.getText().toString(), new StringCallback() {
+                @Override
+                public void onResult(String result) {
+                    Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
+                    if(result.equals("Lozinka uspjesno promjenjena")){
+                        Navigation.findNavController(view).popBackStack();
+                    }
+                }
+            });
+
+        });
 
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
             @Override
@@ -64,28 +80,6 @@ public class ChangePasswordFragment extends Fragment {
         });
 
         return view;
-    }
-
-    private void changePassword(View view) {
-        String oldPassword = oldPasswordEditText.getText().toString();
-        String newPassword = newPasswordEditText.getText().toString();
-        String confirmPassword = confirmNewPasswordEditText.getText().toString();
-
-        if (!oldPassword.equals(account.getPassword())) {
-            Toast.makeText(getContext(), "Stara lozinka nije tačna", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (!newPassword.equals(confirmPassword)) {
-            Toast.makeText(getContext(), "Nove lozinke se ne poklapaju", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        account.setPassword(newPassword);
-        AccountRepository.update(account);
-
-        Navigation.findNavController(view).popBackStack();
-
     }
 
 }
