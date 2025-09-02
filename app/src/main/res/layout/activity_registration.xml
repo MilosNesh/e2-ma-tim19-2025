@@ -6,12 +6,6 @@
     android:background="@color/teal_700"
     android:padding="16dp">
 
-    <Button
-        android:id="@+id/login_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="250dp"
-        android:text="@string/login" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

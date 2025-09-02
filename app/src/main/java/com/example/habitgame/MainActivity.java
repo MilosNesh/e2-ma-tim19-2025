@@ -1,8 +1,12 @@
 package com.example.habitgame;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -60,9 +64,22 @@ public class MainActivity extends AppCompatActivity {
         navController = Navigation.findNavController(this, R.id.mainContainer);
         NavigationUI.setupWithNavController(navigationView, navController);
 
+        SharedPreferences sharedPreferences = getSharedPreferences("HabitGamePrefs", MODE_PRIVATE);
+        String email = sharedPreferences.getString("email", null);
+        String username = sharedPreferences.getString("username", "");
+        int avatar = sharedPreferences.getInt("avatar", R.drawable.avatar1);
+
+        // Postavljanje nav header elementa
+        View headerView = binding.navView.getHeaderView(0);
+        ImageView userImage = headerView.findViewById(R.id.user_image);
+        TextView userName = headerView.findViewById(R.id.user_name);
+
+        userImage.setImageResource(avatar);
+        userName.setText(username);
+
         if (savedInstanceState == null) {
             Bundle args = new Bundle();
-            args.putString("email", "neskovic.milos02@gmail.com");
+            args.putString("email", email);
             navController.navigate(R.id.profileFragment, args);
         }
 
@@ -71,6 +88,9 @@ public class MainActivity extends AppCompatActivity {
             int id = item.getItemId();
 
             if (id == R.id.logout) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.clear();
+                editor.apply();
                 drawer.closeDrawers();
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
                 finish();
@@ -78,14 +98,14 @@ public class MainActivity extends AppCompatActivity {
             }
             else if (id == R.id.profileFragment) {
                 Bundle args = new Bundle();
-                args.putString("email", "neskovic.milos02@gmail.com");
+                args.putString("email", email);
                 navController.navigate(R.id.profileFragment, args);
                 drawer.closeDrawers();
                 return true;
             }
             else if (id == R.id.changePasswordFragment) {
                 Bundle args = new Bundle();
-                args.putString("email", "neskovic.milos02@gmail.com");
+                args.putString("email", email);
                 navController.navigate(R.id.changePasswordFragment, args);
                 drawer.closeDrawers();
                 return true;

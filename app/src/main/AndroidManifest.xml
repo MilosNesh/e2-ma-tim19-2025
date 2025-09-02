@@ -12,11 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HabitGame">
         <activity
-            android:name=".activities.LoginActivity"
-            android:exported="false" />
-        <activity
-            android:name=".activities.RegistrationActivity"
-            android:exported="false">
+            android:name=".activities.SplashScreenActivity"
+            android:exported="false"
+            android:theme="@style/Theme.HabitGame" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -24,8 +22,15 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".activities.LoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.RegistrationActivity"
+            android:exported="false">
+        </activity>
+        <activity
             android:name=".MainActivity"
-            android:exported="true"></activity>
+            android:exported="true" />
     </application>
 
 </manifest>

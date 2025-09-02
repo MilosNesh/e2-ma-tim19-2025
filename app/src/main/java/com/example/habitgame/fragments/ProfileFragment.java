@@ -40,7 +40,6 @@ public class ProfileFragment extends Fragment {
     private ImageView avatar;
     private TextView username, levelAndTitle, pp, xp, coins, badgeLabel;
     private Button changePassword;
-    private Account account;
     private AccountService accountService;
     public ProfileFragment() {
 
@@ -88,8 +87,7 @@ public class ProfileFragment extends Fragment {
         accountService = new AccountService();
         accountService.getAccountByEmail(email, new AccountCallback() {
             @Override
-            public void onResult(Account a) {
-                account = a;
+            public void onResult(Account account) {
                 avatar.setImageResource(account.getAvatar());
                 username.setText(account.getUsername());
                 levelAndTitle.setText("Lvl " + account.getLevel() + " ~ " + account.getTitle());
@@ -103,7 +101,7 @@ public class ProfileFragment extends Fragment {
                 setEquipments(account);
             }
         });
-        
+
 //        changePassword.setOnClickListener(new View.OnClickListener() {
 //            @Override
 //            public void onClick(View view) {

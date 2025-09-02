@@ -37,7 +37,6 @@ public class RegistrationActivity extends AppCompatActivity {
     private ImageView selectedAvatarImageView;
     private Button registerButton;
 
-    private Button loginButton;
     private Integer[] avatars;
     private int selectedAvatar = -1; // Default: no avatar selected
 
@@ -55,7 +54,6 @@ public class RegistrationActivity extends AppCompatActivity {
         confirmPasswordEditText = binding.confirmPassword;
         avatarGridView = binding.avatarGrid;
         registerButton = binding.registerButton;
-        loginButton = binding.loginButton;
 
         this.avatars = new Integer[] {
                 R.drawable.avatar1, R.drawable.avatar2, R.drawable.avatar3,
@@ -103,13 +101,6 @@ public class RegistrationActivity extends AppCompatActivity {
             }
         });
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(RegistrationActivity.this, LoginActivity.class);
-                startActivity(intent);
-            }
-        });
     }
 
     private void addEquipments(){

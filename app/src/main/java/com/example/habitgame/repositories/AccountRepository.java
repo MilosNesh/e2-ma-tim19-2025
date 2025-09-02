@@ -124,7 +124,7 @@ public class AccountRepository {
                         taskCompletionSource.setResult(account);
                     } else {
                         Log.d("NoUserFound", "Nema korisnika sa tim emailom");
-                        taskCompletionSource.setException(new Exception("Nema korisnika sa tim emailom."));
+                        taskCompletionSource.trySetResult(null);
                     }
                 })
                 .addOnFailureListener(e -> {

@@ -29,15 +29,29 @@ import com.google.android.material.navigation.NavigationView;
 
 
 public class ChangePasswordFragment extends Fragment {
-
+    private static final String ARG_EMAIL = "email";
     private FragmentChangePasswordBinding binding;
     private EditText oldPasswordEditText, newPasswordEditText, confirmNewPasswordEditText;
     private Button changePasswordButton;
-    private NavigationView navigationView;
-    private NavController navController;
-    private Account account;
-
+    private String email;
     private AccountService accountService;
+
+    public static ProfileFragment newInstance(String param1) {
+        ProfileFragment fragment = new ProfileFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_EMAIL, param1);
+
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            email = getArguments().getString(ARG_EMAIL);
+        }
+    }
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -50,17 +64,10 @@ public class ChangePasswordFragment extends Fragment {
         confirmNewPasswordEditText = binding.editTextConfirmNewPassword;
         changePasswordButton = binding.buttonChangePassword;
 
-        AccountRepository accountRepository = new AccountRepository();
-        accountRepository.selectByEmail("neskovic.milos02@gmail.com")
-                .addOnSuccessListener(account -> {
-                    if (getContext() != null) {
-                        this.account = account;
-                    }
-                });
         accountService = new AccountService();
 
         changePasswordButton.setOnClickListener(v -> {
-            accountService.changePassword("neskovic.milos02@gmail.com", oldPasswordEditText.getText().toString(), newPasswordEditText.getText().toString(), confirmNewPasswordEditText.getText().toString(), new StringCallback() {
+            accountService.changePassword(email, oldPasswordEditText.getText().toString(), newPasswordEditText.getText().toString(), confirmNewPasswordEditText.getText().toString(), new StringCallback() {
                 @Override
                 public void onResult(String result) {
                     Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
