@@ -124,7 +124,7 @@ public class ProfileFragment extends Fragment {
             badgeImage.setImageResource(R.drawable.badge);
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    58, 58);
+                    100, 100);
             params.setMargins(4, 4, 4, 4);
             badgeImage.setLayoutParams(params);
 
@@ -145,7 +145,7 @@ public class ProfileFragment extends Fragment {
             equipmentImage.setImageResource(resID);
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    58, 58);
+                    100, 100);
             params.setMargins(4, 4, 4, 4);
             equipmentImage.setLayoutParams(params);
 

@@ -106,7 +106,6 @@ public class RegistrationActivity extends AppCompatActivity {
     private void addEquipments(){
         List<Equipment> equipmentList = new ArrayList<>();
 
-        // Dodaj napitke
         equipmentList.add(new Equipment(
                 "Napitak za jednokratnu snagu 20%",
                 "napitak",
@@ -115,7 +114,8 @@ public class RegistrationActivity extends AppCompatActivity {
                 1,
                 false,
                 "potion1",
-                0
+                0,
+                0.5
         ));
 
         equipmentList.add(new Equipment(
@@ -126,7 +126,8 @@ public class RegistrationActivity extends AppCompatActivity {
                 1,
                 false,
                 "potion2",
-                0
+                0,
+                0.7
         ));
 
         equipmentList.add(new Equipment(
@@ -137,7 +138,8 @@ public class RegistrationActivity extends AppCompatActivity {
                 -1,
                 false,
                 "potion3",
-                0
+                0,
+                2
         ));
 
         equipmentList.add(new Equipment(
@@ -148,10 +150,10 @@ public class RegistrationActivity extends AppCompatActivity {
                 -1,
                 false,
                 "potion4",
-                0
+                0,
+                10
         ));
 
-        // Dodaj odeću
         equipmentList.add(new Equipment(
                 "Rukavice",
                 "odeca",
@@ -160,7 +162,8 @@ public class RegistrationActivity extends AppCompatActivity {
                 2,
                 false,
                 "gloves",
-                0
+                0,
+                0.6
         ));
 
         equipmentList.add(new Equipment(
@@ -171,7 +174,8 @@ public class RegistrationActivity extends AppCompatActivity {
                 2,
                 false,
                 "shield",
-                0
+                0,
+                0.6
         ));
 
         equipmentList.add(new Equipment(
@@ -182,10 +186,11 @@ public class RegistrationActivity extends AppCompatActivity {
                 2,
                 false,
                 "boots",
-                0
+                0,
+                0.8
         ));
 
-        // Dodaj oružje
+
         equipmentList.add(new Equipment(
                 "Mac",
                 "oruzje",
@@ -194,6 +199,7 @@ public class RegistrationActivity extends AppCompatActivity {
                 -1,
                 false,
                 "sword",
+                0,
                 0
         ));
 
@@ -205,6 +211,7 @@ public class RegistrationActivity extends AppCompatActivity {
                 -1,
                 false,
                 "bow",
+                0,
                 0
         ));
 

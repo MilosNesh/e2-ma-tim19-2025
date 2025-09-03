@@ -10,10 +10,11 @@ public class Equipment {
     private String image;
 
     private double price;
+    private double pricePercentage;
     public Equipment() {
     }
 
-    public Equipment(String name, String type, String effect, double effectPercentage, int duration, boolean isActivated, String image, double price) {
+    public Equipment(String name, String type, String effect, double effectPercentage, int duration, boolean isActivated, String image, double price, double pricePercentage) {
         this.name = name;
         this.type = type;
         this.effect = effect;
@@ -22,6 +23,7 @@ public class Equipment {
         this.isActivated = isActivated;
         this.image = image;
         this.price = price;
+        this.pricePercentage = pricePercentage;
     }
 
     public String getName() {
@@ -86,5 +88,24 @@ public class Equipment {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public double getPricePercentage() {
+        return pricePercentage;
+    }
+
+    public void setPricePercentage(double pricePercentage) {
+        this.pricePercentage = pricePercentage;
+    }
+
+    public void calculatePrice(int level){
+        double calcPrice = 200;
+        if(level == 1)
+            calcPrice = 0;
+        for(int i=2; i<level; i++){
+            calcPrice*=1.2;
+        }
+        price = calcPrice * pricePercentage;
+//        return price;
     }
 }

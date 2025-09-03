@@ -162,7 +162,8 @@ public class AccountRepository {
 
                         Map<String, Object> updates = new HashMap<>();
                         updates.put("password", account.getPassword());
-
+                        updates.put("equipments", account.getEquipments());
+                        updates.put("coins", account.getCoins());
                         docRef.update(updates)
                                 .addOnSuccessListener(aVoid ->
                                         Log.d("REZ_DB", "Successfully updated user: " + account.getEmail()))

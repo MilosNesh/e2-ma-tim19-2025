@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
             Bundle args = new Bundle();
             args.putString("email", email);
             navController.navigate(R.id.profileFragment, args);
+            actionBar.setTitle(R.string.profile);
         }
 
         // 2. Rukovanje klikovima u meniju (logout ručno)
@@ -100,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
                 Bundle args = new Bundle();
                 args.putString("email", email);
                 navController.navigate(R.id.profileFragment, args);
+                actionBar.setTitle(R.string.profile);
                 drawer.closeDrawers();
                 return true;
             }
@@ -107,6 +109,13 @@ public class MainActivity extends AppCompatActivity {
                 Bundle args = new Bundle();
                 args.putString("email", email);
                 navController.navigate(R.id.changePasswordFragment, args);
+                actionBar.setTitle(R.string.chage_password);
+                drawer.closeDrawers();
+                return true;
+            }
+            else if (id == R.id.shopFragment) {
+                navController.navigate(R.id.shopFragment);
+                actionBar.setTitle(R.string.shop);
                 drawer.closeDrawers();
                 return true;
             }

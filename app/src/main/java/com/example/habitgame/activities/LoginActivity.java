@@ -74,6 +74,7 @@ public class LoginActivity extends AppCompatActivity {
                            SharedPreferences.Editor editor = sharedPreferences.edit();
                            editor.putString("username", account.getUsername());
                            editor.putInt("avatar", account.getAvatar());
+                           editor.putInt("level", account.getLevel());
                            editor.apply();
                        }
                    }

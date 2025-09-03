@@ -7,10 +7,14 @@
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.habitgame.fragments.ProfileFragment"
-        android:label="Profil" />
+        android:label="@string/profile" />
 
     <fragment
         android:id="@+id/changePasswordFragment"
         android:name="com.example.habitgame.fragments.ChangePasswordFragment"
-        android:label="Promena lozinke" />
+        android:label="@string/chage_password" />
+    <fragment
+        android:id="@+id/shopFragment"
+        android:name="com.example.habitgame.fragments.ShopFragment"
+        android:label="@string/shop"/>
 </navigation>

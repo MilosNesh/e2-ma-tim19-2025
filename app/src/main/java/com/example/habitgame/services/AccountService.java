@@ -5,10 +5,13 @@ import android.util.Log;
 import com.example.habitgame.R;
 import com.example.habitgame.model.Account;
 import com.example.habitgame.model.AccountCallback;
+import com.example.habitgame.model.Equipment;
 import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.repositories.AccountRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
+import java.util.List;
 
 public class AccountService {
     private AccountRepository accountRepository;
@@ -132,6 +135,30 @@ public class AccountService {
                 .addOnSuccessListener(account -> {
                     if(account != null)
                         callback.onResult(account);
+                });
+    }
+
+    public void buyEquipment(String email, Equipment equipment, StringCallback callback) {
+        accountRepository.selectByEmail(email)
+                .addOnSuccessListener(account -> {
+                    if(account != null) {
+                        if(account.getCoins() < equipment.getPrice()){
+                            callback.onResult("Nemate dovoljno coinsa na svom nalogu!");
+                            return;
+                        }
+                        List<Equipment> equipmentList = account.getEquipments();
+                        for(Equipment e : equipmentList) {
+                            if (e.getName().equals(equipment.getName()) && equipment.getType().equals("odeca")) {
+                                callback.onResult("Vec posjedujete ovu odjecu!");
+                                return;
+                            }
+                        }
+                        equipmentList.add(equipment);
+                        account.setEquipments(equipmentList);
+                        account.setCoins(account.getCoins() - (int) equipment.getPrice());
+                        AccountRepository.update(account);
+                        callback.onResult("Oprema je uspjesno kupljena");
+                    }
                 });
     }
 }
