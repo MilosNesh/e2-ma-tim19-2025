@@ -17,6 +17,7 @@ public class Account {
     private List<Equipment> equipments;
     private boolean isVerified;
     private long registrationTimestamp;
+    private List<String> friends;
     public Account(){
     }
 
@@ -32,6 +33,7 @@ public class Account {
         this.badgeNumbers = 0;
         this.title = "Baby Knight";
         this.equipments = new ArrayList<>();
+        this.friends = new ArrayList<>();
     }
 
     public String getUsername() {
@@ -136,5 +138,13 @@ public class Account {
 
     public void setRegistrationTimestamp(long registrationTimestamp) {
         this.registrationTimestamp = registrationTimestamp;
+    }
+
+    public List<String> getFriends() {
+        return friends;
+    }
+
+    public void setFriends(List<String> friends) {
+        this.friends = friends;
     }
 }

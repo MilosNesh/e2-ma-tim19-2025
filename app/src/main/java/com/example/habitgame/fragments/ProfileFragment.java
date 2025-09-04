@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -24,6 +25,7 @@ import com.example.habitgame.databinding.FragmentProfileBinding;
 import com.example.habitgame.model.Account;
 import com.example.habitgame.model.AccountCallback;
 import com.example.habitgame.model.Equipment;
+import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.repositories.AccountRepository;
 import com.example.habitgame.services.AccountService;
 
@@ -40,9 +42,10 @@ public class ProfileFragment extends Fragment {
 
     private ImageView avatar;
     private TextView username, levelAndTitle, pp, xp, coins, badgeLabel;
-    private Button changePassword;
+    private ImageButton addFriend;
     private LinearLayout statsSection;
     private AccountService accountService;
+    private Account showedAccount;
     public ProfileFragment() {
 
     }
@@ -85,20 +88,24 @@ public class ProfileFragment extends Fragment {
         coins = binding.coins;
         badgeLabel = binding.badgesLabel;
         statsSection = binding.statsSection;
-//        changePassword = binding.changePassword;
+        addFriend = binding.addFriend;
 
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
         String myEmail = sharedPreferences.getString("email", null);
 
-        if(!myEmail.equals(email))
+        addFriend.setVisibility(view.GONE);
+        if(!myEmail.equals(email)){
             statsSection.setVisibility(view.GONE);
-        else
+        }
+        else{
             statsSection.setVisibility(view.VISIBLE);
+        }
 
         accountService = new AccountService();
         accountService.getAccountByEmail(email, new AccountCallback() {
             @Override
             public void onResult(Account account) {
+                showedAccount = account;
                 avatar.setImageResource(account.getAvatar());
                 username.setText(account.getUsername());
                 levelAndTitle.setText("Lvl " + account.getLevel() + " ~ " + account.getTitle());
@@ -110,18 +117,24 @@ public class ProfileFragment extends Fragment {
                 badgeLabel.setText(bl);
                 setBudges(account);
                 setEquipments(account);
+                if(!account.getFriends().contains(myEmail) && !account.getEmail().equals(myEmail)){
+                    addFriend.setVisibility(view.VISIBLE);
+                }
             }
         });
 
-//        changePassword.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
-//                transaction.replace(R.id.mainContainer, new ChangePasswordFragment());
-//                transaction.addToBackStack(null);
-//                transaction.commit();
-//            }
-//        });
+        addFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                accountService.addFriend(showedAccount, myEmail, new StringCallback() {
+                    @Override
+                    public void onResult(String result) {
+                        Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
+                        addFriend.setVisibility(view.GONE);
+                    }
+                });
+            }
+        });
     }
 
     private void setBudges(Account account){

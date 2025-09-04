@@ -1,5 +1,6 @@
 package com.example.habitgame.fragments;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -29,7 +30,7 @@ public class ProfileListFragment extends Fragment {
     ListView listView;
     EditText searchText;
     ImageButton searchButton;
-
+    String myEmail;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -40,11 +41,14 @@ public class ProfileListFragment extends Fragment {
 
         accountService = new AccountService();
 
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
+        myEmail = sharedPreferences.getString("email", null);
+
         // Get all accounts initially
-        accountService.getAllAccounts(new AccountListCallback() {
+        accountService.getAllExpectMine(myEmail, new AccountListCallback() {
             @Override
             public void onResult(List<Account> accountList) {
-                profileAdapter = new ProfileAdapter(getContext(), accountList, account -> {
+                profileAdapter = new ProfileAdapter(getContext(), accountList, myEmail,account -> {
                     Bundle args = new Bundle();
                     args.putString("email", account.getEmail());
                     NavController navController = Navigation.findNavController(requireActivity(), R.id.mainContainer);
@@ -81,7 +85,7 @@ public class ProfileListFragment extends Fragment {
                 });
             } else {
                 // If search query is empty, show all accounts again
-                accountService.getAllAccounts(new AccountListCallback() {
+                accountService.getAllExpectMine(myEmail, new AccountListCallback() {
                     @Override
                     public void onResult(List<Account> accountList) {
                         if (profileAdapter != null) {

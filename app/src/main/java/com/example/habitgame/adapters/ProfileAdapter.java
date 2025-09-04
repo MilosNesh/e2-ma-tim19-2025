@@ -21,15 +21,17 @@ public class ProfileAdapter extends BaseAdapter {
     private Context context;
     private List<Account> accountList;
     private OnShowClickListener onShowClickListener;
+    private String email;
 
     // Interfejs za klik na dugme za prikaz profla
     public interface OnShowClickListener {
         void onShowClick(Account product);
     }
 
-    public ProfileAdapter(Context context, List<Account> accountList, OnShowClickListener onShowClickListener) {
+    public ProfileAdapter(Context context, List<Account> accountList, String email, OnShowClickListener onShowClickListener) {
         this.context = context;
         this.accountList = accountList;
+        this.email = email;
         this.onShowClickListener = onShowClickListener;
     }
 
@@ -76,7 +78,10 @@ public class ProfileAdapter extends BaseAdapter {
             Account account = accountList.get(position);
 
             holder.usernameTextView.setText(account.getUsername());
-            holder.isFriendTextView.setText(account.getEmail());
+            if(account.getFriends().contains(email))
+                holder.isFriendTextView.setText("Prijatelj");
+            else
+                holder.isFriendTextView.setText("Niste prijatelji");
             holder.imageView.setImageResource(account.getAvatar());
 
             holder.showButton.setOnClickListener(v -> {

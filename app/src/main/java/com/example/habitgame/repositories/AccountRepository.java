@@ -44,13 +44,13 @@ public class AccountRepository {
                                     .addOnSuccessListener(aVoid -> {
                                         Log.d("EMAIL", "Verifikacioni email poslat.");
 
-                                        // Sada dodaj korisnika u Firestore nakon uspešnog slanja emaila
-                                        account.setIsVerified(false); // inicijalno nije verifikovan
-                                        account.setRegistrationTimestamp(System.currentTimeMillis()); // trenutno vreme
+                                        account.setIsVerified(false);
+                                        account.setRegistrationTimestamp(System.currentTimeMillis());
 
                                         db.collection("accounts")
                                                 .add(account)
                                                 .addOnSuccessListener(documentReference -> {
+                                                    FirebaseAuth.getInstance().signOut();
                                                     Log.d("REZ_DB", "DocumentSnapshot added with ID: " + documentReference.getId());
                                                 })
                                                 .addOnFailureListener(e -> Log.w("REZ_DB", "Error adding document", e));
@@ -171,6 +171,7 @@ public class AccountRepository {
                         updates.put("password", account.getPassword());
                         updates.put("equipments", account.getEquipments());
                         updates.put("coins", account.getCoins());
+                        updates.put("friends", account.getFriends());
                         docRef.update(updates)
                                 .addOnSuccessListener(aVoid ->
                                         Log.d("REZ_DB", "Successfully updated user: " + account.getEmail()))
@@ -217,15 +218,8 @@ public class AccountRepository {
         TaskCompletionSource<List<Account>> taskCompletionSource = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        // Pretpostavljamo da korisničko ime treba da počinje sa prosleđenim tekstom.
-        // Da bi implementirao "contains" pretragu, koristi startAt i endAt metode.
-        String searchTermStart = usernameSubstring; // Početak pretrage
-        String searchTermEnd = usernameSubstring + "\uf8ff"; // Kraj pretrage (bilo koji karakter nakon pretrage)
-
         db.collection("accounts")
                 .orderBy("username")
-//                .startAt(searchTermStart)
-//                .endAt(searchTermEnd)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!queryDocumentSnapshots.isEmpty()) {
@@ -246,6 +240,32 @@ public class AccountRepository {
                     taskCompletionSource.setException(e);
                 });
 
+        return taskCompletionSource.getTask();
+    }
+
+    public static Task<List<Account>> selectAllExpectMine(String email){
+        TaskCompletionSource<List<Account>> taskCompletionSource = new TaskCompletionSource<>();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("accounts")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            List<Account> accountList = new ArrayList<>();
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Account account = document.toObject(Account.class);
+                                if(!account.getEmail().equals(email) && account.getIsVerified())
+                                    accountList.add(account);
+                                Log.d("REZ_DB", document.getId() + " => " + document.getData());
+                            }
+                            taskCompletionSource.setResult(accountList);
+                        } else {
+                            Log.w("REZ_DB", "Error getting documents.", task.getException());
+                            taskCompletionSource.setResult(null);
+                        }
+                    }
+                });
         return taskCompletionSource.getTask();
     }
 

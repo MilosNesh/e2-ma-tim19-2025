@@ -49,67 +49,69 @@ public class AccountService {
     }
 
     public void login(String email, String password, StringCallback callback, AccountCallback accountCallback) {
-
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
         AccountRepository accountRepository = new AccountRepository();
 
-        if (user != null) {
-            user.reload()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            if (!user.isEmailVerified()) {
-                                accountRepository.selectByEmail(email)
-                                        .addOnSuccessListener(account -> {
-                                            if (account == null){
-                                                callback.onResult("Ne postoji korisnik sa tim email-om.");
-                                                return;
-                                            }
-                                            long elapsed = System.currentTimeMillis() - account.getRegistrationTimestamp();
-                                            if (elapsed > 2 * 60 * 1000) { // 2 minute je prošlo
-                                                // Brisanje korisničkog naloga iz Firebase-a
-                                                user.delete()
-                                                        .addOnCompleteListener(deleteTask -> {
+        auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = auth.getCurrentUser();
+
+                        if (user != null) {
+                            user.reload().addOnCompleteListener(reloadTask -> {
+                                if (reloadTask.isSuccessful()) {
+                                    if (!user.isEmailVerified()) {
+                                        accountRepository.selectByEmail(email)
+                                                .addOnSuccessListener(account -> {
+                                                    if (account == null) {
+                                                        callback.onResult("Ne postoji korisnik sa tim email-om.");
+                                                        return;
+                                                    }
+
+                                                    long elapsed = System.currentTimeMillis() - account.getRegistrationTimestamp();
+                                                    if (elapsed > 2 * 60 * 1000) { // više od 2 minute
+                                                        user.delete().addOnCompleteListener(deleteTask -> {
                                                             if (deleteTask.isSuccessful()) {
-                                                                // Obriši podatke o korisniku iz tvoje baze
                                                                 AccountRepository.deleteByEmail(user.getEmail());
-
-                                                                // Odjavi korisnika
-                                                                FirebaseAuth.getInstance().signOut();
-
+                                                                auth.signOut();
                                                                 callback.onResult("Link za verifikaciju je istekao. Registrujte se ponovo.");
                                                             } else {
-                                                                // Greška prilikom brisanja korisničkog naloga
                                                                 Log.e("Firebase", "Greška pri brisanju korisnika", deleteTask.getException());
                                                                 callback.onResult("Greška pri brisanju korisničkog naloga.");
                                                             }
                                                         });
-                                            } else {
-                                                callback.onResult("Molimo verifikujte email pre prijave.");
-                                            }
-                                        }).addOnFailureListener(e-> callback.onResult("Ne postoji korisnik sa trazenim emailom!"));
-                            } else {
-                                AccountRepository.updateIsVerified(user.getEmail(), true);
+                                                    } else {
+                                                        callback.onResult("Molimo verifikujte email pre prijave.");
+                                                    }
+                                                })
+                                                .addOnFailureListener(e -> callback.onResult("Greška prilikom traženja korisnika."));
+                                    } else {
+                                        AccountRepository.updateIsVerified(user.getEmail(), true);
 
-                                accountRepository.selectByEmail(email)
-                                        .addOnSuccessListener(account -> {
-                                            if (account == null){
-                                                callback.onResult("Ne postoji korisnik sa tim email-om.");
-                                            }
-                                            if (account != null && account.getPassword().equals(password)) {
-                                                callback.onResult("");
-                                                accountCallback.onResult(account);
-                                            } else {
-                                                callback.onResult("Prijava nije uspela. Pogrešan email ili lozinka");
-                                            }
-                                        });
-                            }
-                        } else {
-                            Log.e("Firebase", "Greška pri osvežavanju korisničkih podataka", task.getException());
+                                        accountRepository.selectByEmail(email)
+                                                .addOnSuccessListener(account -> {
+                                                    if (account == null) {
+                                                        callback.onResult("Ne postoji korisnik sa tim email-om.");
+                                                    } else if (account.getPassword().equals(password)) {
+                                                        callback.onResult("");
+                                                        accountCallback.onResult(account);
+                                                    } else {
+                                                        callback.onResult("Prijava nije uspela. Pogrešan email ili lozinka.");
+                                                    }
+                                                });
+                                    }
+                                } else {
+                                    Log.e("Firebase", "Greška pri osvežavanju korisnika", reloadTask.getException());
+                                    callback.onResult("Greška pri osvežavanju podataka.");
+                                }
+                            });
                         }
-                    }).addOnFailureListener(e-> callback.onResult("Ne postoji korisnik sa trazenim email-om!"));
-        }
-
+                    } else {
+                        callback.onResult("Prijava nije uspela. Proverite email i lozinku.");
+                    }
+                });
     }
+
 
     public void changePassword(String email, String oldPassword, String newPassword, String confirmPassword, StringCallback callback) {
         accountRepository.selectByEmail(email)
@@ -118,15 +120,28 @@ public class AccountService {
                         callback.onResult("Stara lozinka nije tačna");
                         return;
                     }
-
+                    if(newPassword.length()<6) {
+                        callback.onResult("Lozinka mora sadrzati barem 6 karaktera.");
+                        return;
+                    }
                     if (!newPassword.equals(confirmPassword)) {
                         callback.onResult("Nove lozinke se ne poklapaju");
                         return;
                     }
 
-                    account.setPassword(newPassword);
-                    AccountRepository.update(account);
-                    callback.onResult("Lozinka uspjesno promjenjena");
+                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                    user.updatePassword(newPassword)
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Log.d("PASSWORD", "Lozinka uspešno promenjena!");
+                                    account.setPassword(newPassword);
+                                    AccountRepository.update(account);
+                                    callback.onResult("Lozinka uspjesno promjenjena");
+                                } else {
+                                    callback.onResult("Greska prilikom promjene lozinke");
+                                    Log.e("PASSWORD", "Greška pri promeni lozinke", task.getException());
+                                }
+                            });
                 });
     }
 
@@ -170,6 +185,29 @@ public class AccountService {
 
     public void searchByUSername(String username, AccountListCallback callback) {
         accountRepository.selectByUsernameContains(username).addOnSuccessListener(accountList -> {
+            callback.onResult(accountList);
+        });
+    }
+
+    public void addFriend(Account account1, String email, StringCallback callback) {
+        accountRepository.selectByEmail(email).addOnSuccessListener(account2 -> {
+            List<String> friends1 = account1.getFriends();
+            friends1.add(email);
+            List<String> friends2 = account2.getFriends();
+            friends2.add(account1.getEmail());
+            account1.setFriends(friends1);
+            account2.setFriends(friends2);
+
+            AccountRepository.update(account1);
+            AccountRepository.update(account2);
+            callback.onResult("Dodali ste novog prijatelja.");
+        }).addOnFailureListener(e -> {
+            callback.onResult("Doslo je do greske prilikom dodavanja novog prijatelja.");
+        });
+    }
+
+    public void getAllExpectMine(String email, AccountListCallback callback) {
+        AccountRepository.selectAllExpectMine(email).addOnSuccessListener(accountList -> {
             callback.onResult(accountList);
         });
     }
