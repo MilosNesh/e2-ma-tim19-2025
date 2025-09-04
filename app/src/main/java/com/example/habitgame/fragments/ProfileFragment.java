@@ -2,6 +2,7 @@ package com.example.habitgame.fragments;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -28,6 +29,7 @@ import com.example.habitgame.model.Equipment;
 import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.repositories.AccountRepository;
 import com.example.habitgame.services.AccountService;
+import com.example.habitgame.services.QRCodeService;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -40,7 +42,7 @@ public class ProfileFragment extends Fragment {
     private static final String ARG_EMAIL = "email";
     private String email;
 
-    private ImageView avatar;
+    private ImageView avatar, qrCode;
     private TextView username, levelAndTitle, pp, xp, coins, badgeLabel;
     private ImageButton addFriend;
     private LinearLayout statsSection;
@@ -89,6 +91,7 @@ public class ProfileFragment extends Fragment {
         badgeLabel = binding.badgesLabel;
         statsSection = binding.statsSection;
         addFriend = binding.addFriend;
+        qrCode = binding.qrcode;
 
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
         String myEmail = sharedPreferences.getString("email", null);
@@ -101,6 +104,7 @@ public class ProfileFragment extends Fragment {
             statsSection.setVisibility(view.VISIBLE);
         }
 
+        QRCodeService qrCodeService = new QRCodeService();
         accountService = new AccountService();
         accountService.getAccountByEmail(email, new AccountCallback() {
             @Override
@@ -120,6 +124,7 @@ public class ProfileFragment extends Fragment {
                 if(!account.getFriends().contains(myEmail) && !account.getEmail().equals(myEmail)){
                     addFriend.setVisibility(view.VISIBLE);
                 }
+                qrCode.setImageBitmap(qrCodeService.generateQRCode(account.getEmail()));
             }
         });
 

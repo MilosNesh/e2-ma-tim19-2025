@@ -26,6 +26,10 @@ import com.example.habitgame.activities.LoginActivity;
 import com.example.habitgame.activities.RegistrationActivity;
 import com.example.habitgame.databinding.ActivityMainBinding;
 import com.example.habitgame.fragments.ProfileFragment;
+import com.example.habitgame.model.Account;
+import com.example.habitgame.model.AccountCallback;
+import com.example.habitgame.model.StringCallback;
+import com.example.habitgame.services.AccountService;
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -69,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         String username = sharedPreferences.getString("username", "");
         int avatar = sharedPreferences.getInt("avatar", R.drawable.avatar1);
 
+
         // Postavljanje nav header elementa
         View headerView = binding.navView.getHeaderView(0);
         ImageView userImage = headerView.findViewById(R.id.user_image);
@@ -82,6 +87,30 @@ public class MainActivity extends AppCompatActivity {
             args.putString("email", email);
             navController.navigate(R.id.profileFragment, args);
             actionBar.setTitle(R.string.profile);
+        }
+
+        Intent intentQR = getIntent();
+        if (intentQR.getData() != null) {
+            String qrEmail = intentQR.getData().getQueryParameter("email");
+
+            if (qrEmail != null && email != null) {
+                AccountService accountService = new AccountService();
+                accountService.getAccountByEmail(qrEmail, new AccountCallback() {
+                    @Override
+                    public void onResult(Account account) {
+                        accountService.addFriend(account, email, new StringCallback() {
+                            @Override
+                            public void onResult(String result) {
+                                Toast.makeText(MainActivity.this, result, Toast.LENGTH_SHORT).show();
+                                Bundle args = new Bundle();
+                                args.putString("email", qrEmail);
+                                navController.navigate(R.id.profileFragment, args);
+                                actionBar.setTitle(R.string.friend);
+                            }
+                        });
+                    }
+                });
+            }
         }
 
         // 2. Rukovanje klikovima u meniju (logout ručno)
@@ -135,21 +164,5 @@ public class MainActivity extends AppCompatActivity {
             return handled;
         });
 
-
-//        navController.addOnDestinationChangedListener((navController, navDestination, bundle) -> {
-//            int id = navDestination.getId();
-//
-//            if (id == R.id.profileFragment) {
-//                getSupportFragmentManager().beginTransaction()
-//                    .replace(R.id.mainContainer, ProfileFragment.newInstance("neskovic.milos02@gmail.com"))
-//                    .commit();
-//
-//            } else if (id == R.id.logout) {
-//                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-//                startActivity(intent);
-//            }
-//
-//            drawer.closeDrawers();
-//        });
     }
 }

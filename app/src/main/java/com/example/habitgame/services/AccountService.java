@@ -192,6 +192,10 @@ public class AccountService {
     public void addFriend(Account account1, String email, StringCallback callback) {
         accountRepository.selectByEmail(email).addOnSuccessListener(account2 -> {
             List<String> friends1 = account1.getFriends();
+            if(friends1.contains(email)){
+                callback.onResult("Vec ste prijatelji!");
+                return;
+            }
             friends1.add(email);
             List<String> friends2 = account2.getFriends();
             friends2.add(account1.getEmail());
