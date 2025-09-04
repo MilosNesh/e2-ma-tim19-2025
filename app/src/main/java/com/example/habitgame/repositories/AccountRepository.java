@@ -18,7 +18,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AccountRepository {
@@ -64,8 +66,8 @@ public class AccountRepository {
                 });
     }
 
-    public static void select(){
-        Log.i("DB", "select");
+    public static Task<List<Account>> select(){
+        TaskCompletionSource<List<Account>> taskCompletionSource = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("accounts")
                 .get()
@@ -73,15 +75,20 @@ public class AccountRepository {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
+                            List<Account> accountList = new ArrayList<>();
                             for (QueryDocumentSnapshot document : task.getResult()) {
+                                Account account = document.toObject(Account.class);
+                                accountList.add(account);
                                 Log.d("REZ_DB", document.getId() + " => " + document.getData());
                             }
+                            taskCompletionSource.setResult(accountList);
                         } else {
                             Log.w("REZ_DB", "Error getting documents.", task.getException());
+                            taskCompletionSource.setResult(null);
                         }
                     }
                 });
-
+        return taskCompletionSource.getTask();
     }
 
     public Task<Account> selectByUsername(String username){
@@ -205,5 +212,42 @@ public class AccountRepository {
                     }
                 });
     }
+
+    public Task<List<Account>> selectByUsernameContains(String usernameSubstring) {
+        TaskCompletionSource<List<Account>> taskCompletionSource = new TaskCompletionSource<>();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // Pretpostavljamo da korisničko ime treba da počinje sa prosleđenim tekstom.
+        // Da bi implementirao "contains" pretragu, koristi startAt i endAt metode.
+        String searchTermStart = usernameSubstring; // Početak pretrage
+        String searchTermEnd = usernameSubstring + "\uf8ff"; // Kraj pretrage (bilo koji karakter nakon pretrage)
+
+        db.collection("accounts")
+                .orderBy("username")
+//                .startAt(searchTermStart)
+//                .endAt(searchTermEnd)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        List<Account> accounts = new ArrayList<>();
+                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                            Account account = document.toObject(Account.class);
+                            if(account.getUsername().toLowerCase().contains(usernameSubstring.toLowerCase()))
+                                 accounts.add(account);
+                        }
+                        taskCompletionSource.setResult(accounts);
+                    } else {
+                        Log.d("NoUsersFound", "Nema korisnika koji sadrže zadati deo korisničkog imena.");
+                        taskCompletionSource.setResult(null);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirebaseError", "Greška prilikom pretrage korisnika: ", e);
+                    taskCompletionSource.setException(e);
+                });
+
+        return taskCompletionSource.getTask();
+    }
+
 
 }

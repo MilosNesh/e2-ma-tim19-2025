@@ -5,6 +5,7 @@ import android.util.Log;
 import com.example.habitgame.R;
 import com.example.habitgame.model.Account;
 import com.example.habitgame.model.AccountCallback;
+import com.example.habitgame.model.AccountListCallback;
 import com.example.habitgame.model.Equipment;
 import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.repositories.AccountRepository;
@@ -15,7 +16,6 @@ import java.util.List;
 
 public class AccountService {
     private AccountRepository accountRepository;
-    private Account account;
 
     public AccountService(){
         accountRepository = new AccountRepository();
@@ -160,5 +160,17 @@ public class AccountService {
                         callback.onResult("Oprema je uspjesno kupljena");
                     }
                 });
+    }
+
+    public void getAllAccounts(AccountListCallback callback) {
+        AccountRepository.select().addOnSuccessListener(accountList -> {
+            callback.onResult(accountList);
+        });
+    }
+
+    public void searchByUSername(String username, AccountListCallback callback) {
+        accountRepository.selectByUsernameContains(username).addOnSuccessListener(accountList -> {
+            callback.onResult(accountList);
+        });
     }
 }

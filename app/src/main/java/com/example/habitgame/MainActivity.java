@@ -113,6 +113,12 @@ public class MainActivity extends AppCompatActivity {
                 drawer.closeDrawers();
                 return true;
             }
+            else if (id == R.id.profileListFragment) {
+                navController.navigate(R.id.profileListFragment);
+                actionBar.setTitle(R.string.friends);
+                drawer.closeDrawers();
+                return true;
+            }
             else if (id == R.id.shopFragment) {
                 navController.navigate(R.id.shopFragment);
                 actionBar.setTitle(R.string.shop);

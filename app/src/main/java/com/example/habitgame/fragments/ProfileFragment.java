@@ -1,6 +1,7 @@
 package com.example.habitgame.fragments;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -40,6 +41,7 @@ public class ProfileFragment extends Fragment {
     private ImageView avatar;
     private TextView username, levelAndTitle, pp, xp, coins, badgeLabel;
     private Button changePassword;
+    private LinearLayout statsSection;
     private AccountService accountService;
     public ProfileFragment() {
 
@@ -82,7 +84,16 @@ public class ProfileFragment extends Fragment {
         xp = binding.xp;
         coins = binding.coins;
         badgeLabel = binding.badgesLabel;
+        statsSection = binding.statsSection;
 //        changePassword = binding.changePassword;
+
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
+        String myEmail = sharedPreferences.getString("email", null);
+
+        if(!myEmail.equals(email))
+            statsSection.setVisibility(view.GONE);
+        else
+            statsSection.setVisibility(view.VISIBLE);
 
         accountService = new AccountService();
         accountService.getAccountByEmail(email, new AccountCallback() {

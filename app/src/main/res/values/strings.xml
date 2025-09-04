@@ -31,4 +31,9 @@
     <string name="previous">Previous</string>
     <string name="shop">Prodavnica</string>
     <string name="buy">Kupi</string>
+    <string name="show_profile">Prikazi profil</string>
+    <string name="friend">Prijatelj</string>
+    <string name="friends">Prjatelji</string>
+    <string name="search_profile_hint">Unesite korisnicko ime za pretragu</string>
+    <string name="search">Pretrazi</string>
 </resources>
