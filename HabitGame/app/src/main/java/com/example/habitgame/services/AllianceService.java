@@ -7,8 +7,10 @@ import androidx.annotation.NonNull;
 
 import com.example.habitgame.model.Account;
 import com.example.habitgame.model.Alliance;
+import com.example.habitgame.model.AllianceCallback;
 import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.repositories.AllianceRepository;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -27,30 +29,49 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class AllianceService {
-    public void save(Alliance alliance, StringCallback callback) {
+    public void save(Alliance alliance, AllianceCallback callback) {
         AllianceRepository.insert(alliance).addOnSuccessListener(res -> {
-                callback.onResult("Savez uspjesno dodat!");
+                callback.onResult(alliance);
         }).addOnFailureListener(ex -> {
-            callback.onResult("Doslo je do greske prilikom dodavalja saveza!");
+            callback.onResult(alliance);
         });
     }
 
-    public void sendAllianceInvite(String allianceName, List<Account> accountList, String leaderEmail) throws JSONException {
+    public void sendAllianceInvite(String allianceId, String allianceName, List<Account> accountList, String leaderEmail) {
         Log.i("AllianceInvite", "Veličina liste: " + accountList.size());
 
         for (Account account : accountList) {
-            JSONObject notificationObject = new JSONObject();
-            notificationObject.put("title", leaderEmail);
-            notificationObject.put("body", "Pozvani ste u savez "+allianceName);
-            notificationObject.put("token", account.getFcmToken());
-            callApi(notificationObject);
+            try{
+                JSONObject notificationObject = new JSONObject();
+                notificationObject.put("title", "Savez-"+allianceName);
+                notificationObject.put("body", "Korisnik "+leaderEmail+" Vas poziva u savez "+allianceName+".");
+                notificationObject.put("token", account.getFcmToken());
+                notificationObject.put("allianceId", allianceId);
+                notificationObject.put("senderEmail", leaderEmail);
+                notificationObject.put("inviteId", account.getEmail());
+                callApi(notificationObject, "send-invite");
+
+            }catch (JSONException e){}
+
         }
     }
 
-    public void callApi(JSONObject jsonObject){
+    public void sendAnswer(String token, String usename) {
+        try {
+            JSONObject notificationObject = new JSONObject();
+            notificationObject.put("title", "Prihvacen zahtjev");
+            notificationObject.put("body", "Korisnik "+usename+" je prihvaio vas poziv u savez,");
+            notificationObject.put("token", token);
+            callApi(notificationObject, "send");
+        } catch (JSONException e) {
+
+        }
+    }
+
+    private void callApi(JSONObject jsonObject, String endpoint){
         MediaType JSON = MediaType.get("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient();
-        String url = "https://fcm-server-965j.onrender.com/send";
+        String url = "https://fcm-server-965j.onrender.com/"+endpoint;
         RequestBody body = RequestBody.create(jsonObject.toString(), JSON);
         Request request = new Request.Builder()
                 .url(url)
@@ -70,4 +91,11 @@ public class AllianceService {
             }
         });
      }
+
+     public void getById(String id, AllianceCallback callback) {
+        AllianceRepository.getById(id).addOnSuccessListener(alliance -> {
+            callback.onResult(alliance);
+        });
+     }
+
 }

@@ -23,6 +23,10 @@
         android:name="com.example.habitgame.fragments.ShopFragment"
         android:label="@string/shop"/>
     <fragment
+        android:id="@+id/allianceFragment"
+        android:name="com.example.habitgame.fragments.AllianceFragment"
+        android:label="@string/alliance"/>
+    <fragment
         android:id="@+id/addAllianceFragment"
         android:name="com.example.habitgame.fragments.AddAllianceFragment"
         android:label="Add Alliance"/>

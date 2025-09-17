@@ -38,4 +38,9 @@
     <string name="search">Pretrazi</string>
     <string name="alliance_name_hint">Naziv saveza</string>
     <string name="add_alliance">Dodaj savez</string>
+    <string name="leader">Vodja saveza</string>
+    <string name="members">Clanovi saveza</string>
+    <string name="alliance">Savez</string>
+    <string name="leave">Napusti</string>
+    <string name="delete">Obrisi</string>
 </resources>

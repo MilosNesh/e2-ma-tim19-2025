@@ -1,13 +1,16 @@
 package com.example.habitgame.repositories;
 
 import com.example.habitgame.model.Alliance;
+import com.example.habitgame.model.AllianceCallback;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 public class AllianceRepository {
-    public static Task<String> insert(Alliance alliance) {
-        TaskCompletionSource<String> taskCompletionSource = new TaskCompletionSource<>();
+    public static Task<Alliance> insert(Alliance alliance) {
+        TaskCompletionSource<Alliance> taskCompletionSource = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         db.collection("alliances")
@@ -21,16 +24,41 @@ public class AllianceRepository {
                             .document(documentId)
                             .set(alliance)
                             .addOnSuccessListener(aVoid -> {
-                                taskCompletionSource.setResult("Savez uspjesno dodat!");
+                                taskCompletionSource.setResult(alliance);
                             })
                             .addOnFailureListener(e -> {
-                                taskCompletionSource.setResult("Doslo je do greske prilikom dodavanja saveza!");
+                                taskCompletionSource.setResult(null);
                             });
 
                 })
                 .addOnFailureListener(e -> {
-                    taskCompletionSource.setResult("Doslo je do greske prilikom dodavanja saveza!");
+                    taskCompletionSource.setResult(null);
                 });
+
+        return taskCompletionSource.getTask();
+    }
+
+
+    public static Task<Alliance> getById(String id) {
+        TaskCompletionSource<Alliance> taskCompletionSource = new TaskCompletionSource<>();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+
+        db.collection("alliances")
+                .document(id)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Alliance alliance = documentSnapshot.toObject(Alliance.class);
+                        taskCompletionSource.setResult(alliance);
+                    } else {
+                        taskCompletionSource.setResult(null);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    taskCompletionSource.setResult(null);
+                });
+
         return taskCompletionSource.getTask();
     }
 }

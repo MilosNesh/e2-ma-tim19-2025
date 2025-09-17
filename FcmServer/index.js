@@ -31,6 +31,31 @@ app.post('/send', async (req, res) => {
   }
 });
 
+app.post('/send-invite', async (req, res) => {
+  const { token, title, body, allianceId, inviteId, senderEmail } = req.body;
+
+  try {
+    const message = {
+      token: token,
+      data: {
+        action: 'invite', 
+        allianceId: allianceId,
+        inviteId: inviteId,
+        title: title, 
+        body: body,
+        senderEmail: senderEmail,
+      },
+    };
+
+    const response = await admin.messaging().send(message);
+    res.json({ success: true, response });
+  } catch (error) {
+    console.error('Greška pri slanju data notifikacije:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server sluša na portu ${PORT}`);

@@ -75,6 +75,7 @@ public class LoginActivity extends AppCompatActivity {
                            editor.putString("username", account.getUsername());
                            editor.putInt("avatar", account.getAvatar());
                            editor.putInt("level", account.getLevel());
+                           editor.putString("allianceId", account.getAllianceId());
                            editor.apply();
                        }
                    }

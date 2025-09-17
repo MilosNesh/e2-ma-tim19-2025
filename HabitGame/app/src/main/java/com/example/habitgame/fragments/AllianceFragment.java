@@ -1,0 +1,120 @@
+package com.example.habitgame.fragments;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+
+import androidx.fragment.app.Fragment;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.habitgame.R;
+import com.example.habitgame.adapters.ProfileAdapter;
+import com.example.habitgame.model.Account;
+import com.example.habitgame.model.AccountListCallback;
+import com.example.habitgame.model.Alliance;
+import com.example.habitgame.model.AllianceCallback;
+import com.example.habitgame.services.AccountService;
+import com.example.habitgame.services.AllianceService;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class AllianceFragment extends Fragment {
+
+    private TextView allianceName;
+    private ListView memebers, leader;
+    private String allainceId, myEmail;
+    private AllianceService allianceService;
+    private AccountService accountService;
+    private ProfileAdapter profileAdapter, leaderAdapter;
+    private Button deleteAlliance, leaveAlliance;
+    public AllianceFragment() {
+    }
+
+    public static AllianceFragment newInstance(String param1, String param2) {
+        AllianceFragment fragment = new AllianceFragment();
+        Bundle args = new Bundle();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_alliance, container, false);
+        allianceName = view.findViewById(R.id.alliance_name_);
+        memebers = view.findViewById(R.id.members);
+        leader = view.findViewById(R.id.leader);
+        deleteAlliance = view.findViewById(R.id.delete_alliance);
+        leaveAlliance = view.findViewById(R.id.leave_alliance);
+
+        leaveAlliance.setVisibility(view.GONE);
+        deleteAlliance.setVisibility(view.GONE);
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
+        allainceId = sharedPreferences.getString("allianceId", null);
+        myEmail = sharedPreferences.getString("email", null);
+
+        allianceService = new AllianceService();
+        accountService = new AccountService();
+
+        allianceService.getById(allainceId, new AllianceCallback() {
+            @Override
+            public void onResult(Alliance alliance) {
+                allianceName.setText(alliance.getName());
+                accountService.getByAlliance(allainceId, new AccountListCallback() {
+                    @Override
+                    public void onResult(List<Account> accountList) {
+                        List<Account> leaderList = new ArrayList<>();
+                        for(Account acc : accountList) {
+                            if(acc.getEmail().equals(alliance.getLeader()))
+                                leaderList.add(acc);
+                        }
+                        leaderAdapter =   profileAdapter = new ProfileAdapter(getContext(), leaderList, myEmail, account -> {
+                            Toast.makeText(getContext(), account.getUsername(), Toast.LENGTH_SHORT).show();
+                        });
+                        profileAdapter = new ProfileAdapter(getContext(), accountList, myEmail, account -> {
+                            Toast.makeText(getContext(), account.getUsername(), Toast.LENGTH_SHORT).show();
+                        });
+
+                        leader.setAdapter(leaderAdapter);
+                        memebers.setAdapter(profileAdapter);
+                        if(myEmail.equals(alliance.getLeader()))
+                            deleteAlliance.setVisibility(view.VISIBLE);
+                        else
+                            leaveAlliance.setVisibility(view.VISIBLE);
+                    }
+                });
+            }
+        });
+        return view;
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        deleteAlliance.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getContext(), "Brisi!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        leaveAlliance.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getContext(), "Napusti!", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+}

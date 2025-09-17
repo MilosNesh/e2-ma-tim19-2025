@@ -1,7 +1,10 @@
 package com.example.habitgame.activities;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -24,6 +27,17 @@ public class SplashScreenActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivitySplashScreenBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            CharSequence name = "Default Channel";
+//            String description = "Channel for Alliance Invites";
+//            int importance = NotificationManager.IMPORTANCE_HIGH;
+//            NotificationChannel channel = new NotificationChannel("channel_id", name, importance);
+//            channel.setDescription(description);
+//
+//            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+//            notificationManager.createNotificationChannel(channel);
+//        }
 
         int SPLASH_TIME_OUT = 1000;
         new Timer().schedule(new TimerTask() {

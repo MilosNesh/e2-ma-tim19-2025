@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FirebaseApp.initializeApp(MainActivity.this);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -165,6 +164,12 @@ public class MainActivity extends AppCompatActivity {
             else if (id == R.id.shopFragment) {
                 navController.navigate(R.id.shopFragment);
                 actionBar.setTitle(R.string.shop);
+                drawer.closeDrawers();
+                return true;
+            }
+            else if (id == R.id.allianceFragment) {
+                navController.navigate(R.id.allianceFragment);
+                actionBar.setTitle(R.string.alliance);
                 drawer.closeDrawers();
                 return true;
             }
