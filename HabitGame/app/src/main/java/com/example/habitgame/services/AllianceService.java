@@ -5,7 +5,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.example.habitgame.model.AccessToken;
 import com.example.habitgame.model.Account;
 import com.example.habitgame.model.Alliance;
 import com.example.habitgame.model.StringCallback;
@@ -37,31 +36,27 @@ public class AllianceService {
     }
 
     public void sendAllianceInvite(String allianceName, List<Account> accountList, String leaderEmail) throws JSONException {
+        Log.i("AllianceInvite", "Veličina liste: " + accountList.size());
 
         for (Account account : accountList) {
-            JSONObject jsonObject = new JSONObject();
-
             JSONObject notificationObject = new JSONObject();
             notificationObject.put("title", leaderEmail);
             notificationObject.put("body", "Pozvani ste u savez "+allianceName);
-
-            jsonObject.put("notification", notificationObject);
-            jsonObject.put("to", account.getFcmToken());
-
-            callApi(jsonObject);
+            notificationObject.put("token", account.getFcmToken());
+            callApi(notificationObject);
         }
     }
 
     public void callApi(JSONObject jsonObject){
         MediaType JSON = MediaType.get("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient();
-        AccessToken accessToken = new AccessToken();
-        String url = "https://fcm.googleapis.com/v1/projects/habitgame-3b883/messages:send";
+        String url = "https://fcm-server-965j.onrender.com/send";
         RequestBody body = RequestBody.create(jsonObject.toString(), JSON);
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
-                .header("Authorization", "Bearer "+accessToken.getAccessToken()).build();
+                .header("Content-Type", "application/json")
+                .build();
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -71,6 +66,7 @@ public class AllianceService {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 Log.i("Notifikacija","Poslato valjda");
+                response.close();
             }
         });
      }

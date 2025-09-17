@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -72,8 +73,8 @@ public class AddAllianceFragment extends Fragment {
         // Get all accounts initially
         accountService.getAllFriends(myEmail, new AccountListCallback() {
             @Override
-            public void onResult(List<Account> accountList) {
-                profileAdapter = new ProfileAdapter(getContext(), accountList, myEmail, account -> {
+            public void onResult(List<Account> result) {
+                profileAdapter = new ProfileAdapter(getContext(), result, myEmail, account -> {
                     Toast.makeText(getContext(), account.getUsername(), Toast.LENGTH_SHORT).show();
                     accountList.add(account);
                 });
@@ -99,9 +100,9 @@ public class AddAllianceFragment extends Fragment {
 //                    allianceService.sendAllianceInvite(alliance, accountList, myEmail);
 //                }
 //            });
-            Toast.makeText(getContext(), "Savez dodat", Toast.LENGTH_SHORT).show();
             try {
                 allianceService.sendAllianceInvite(alliance.getName(), accountList, myEmail);
+                Toast.makeText(getContext(), "Savez dodat", Toast.LENGTH_SHORT).show();
             } catch (JSONException e) {
                 throw new RuntimeException(e);
             }
