@@ -9,6 +9,7 @@ import com.example.habitgame.model.AccountListCallback;
 import com.example.habitgame.model.Equipment;
 import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.repositories.AccountRepository;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -224,5 +225,17 @@ public class AccountService {
 
     public static void updateFcmTokne(String email, String token) {
         AccountRepository.updateFcmToken(email, token);
+    }
+
+    public static void updateAlliance(String email, String allianceId, AccountCallback callback) {
+        AccountRepository.updateAlliance(email, allianceId).addOnSuccessListener(account -> {
+            callback.onResult(account);
+        });
+    }
+
+    public void getByAlliance(String allianceId, AccountListCallback callback) {
+        AccountRepository.getByAlliance(allianceId).addOnSuccessListener(accountList -> {
+            callback.onResult(accountList);
+        });
     }
 }

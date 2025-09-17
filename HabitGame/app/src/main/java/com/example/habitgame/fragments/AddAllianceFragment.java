@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import com.example.habitgame.adapters.ProfileAdapter;
 import com.example.habitgame.model.Account;
 import com.example.habitgame.model.AccountListCallback;
 import com.example.habitgame.model.Alliance;
+import com.example.habitgame.model.AllianceCallback;
 import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.services.AccountService;
 import com.example.habitgame.services.AllianceService;
@@ -39,6 +41,7 @@ public class AddAllianceFragment extends Fragment {
     private ProfileAdapter profileAdapter;
     private AllianceService allianceService;
     private List<Account> accountList;
+    private  SharedPreferences sharedPreferences;
     public AddAllianceFragment() {
         // Required empty public constructor
     }
@@ -66,14 +69,14 @@ public class AddAllianceFragment extends Fragment {
         accountService = new AccountService();
         allianceService = new AllianceService();
         accountList = new ArrayList<>();
-        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
+        sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
         myEmail = sharedPreferences.getString("email", null);
 
         // Get all accounts initially
         accountService.getAllFriends(myEmail, new AccountListCallback() {
             @Override
-            public void onResult(List<Account> accountList) {
-                profileAdapter = new ProfileAdapter(getContext(), accountList, myEmail, account -> {
+            public void onResult(List<Account> result) {
+                profileAdapter = new ProfileAdapter(getContext(), result, myEmail, account -> {
                     Toast.makeText(getContext(), account.getUsername(), Toast.LENGTH_SHORT).show();
                     accountList.add(account);
                 });
@@ -92,19 +95,25 @@ public class AddAllianceFragment extends Fragment {
                 return;
             }
             Alliance alliance = new Alliance(allianceName.getText().toString(), myEmail);
-//            allianceService.save(alliance, new StringCallback() {
-//                @Override
-//                public void onResult(String result) {
-//                    Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
-//                    allianceService.sendAllianceInvite(alliance, accountList, myEmail);
-//                }
-//            });
-            Toast.makeText(getContext(), "Savez dodat", Toast.LENGTH_SHORT).show();
-            try {
-                allianceService.sendAllianceInvite(alliance.getName(), accountList, myEmail);
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
+            allianceService.save(alliance, new AllianceCallback() {
+                @Override
+                public void onResult(Alliance result) {
+                    if (result == null) {
+                        Toast.makeText(getContext(), "Greska prilikom dodavanja savrza!", Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        allianceService.sendAllianceInvite(result.getId(), result.getName(), accountList, myEmail);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("allianceId", result.getId());
+                        editor.apply();
+
+                        Toast.makeText(getContext(), "Savez dodat", Toast.LENGTH_SHORT).show();
+                        NavController navController = Navigation.findNavController(requireActivity(), R.id.mainContainer);
+                        navController.navigate(R.id.allianceFragment);
+                    }
+                }
+            });
+
         });
     }
 }

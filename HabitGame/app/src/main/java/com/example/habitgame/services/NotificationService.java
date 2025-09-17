@@ -1,57 +1,74 @@
 package com.example.habitgame.services;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.habitgame.MainActivity;
 import com.example.habitgame.R;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 public class NotificationService extends FirebaseMessagingService {
-
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        // Ako je poruka sa podacima
+        // Proveravamo da li poruka sadrži podatke
         if (remoteMessage.getData().size() > 0) {
+            String action = remoteMessage.getData().get("action");
+            String inviteId = remoteMessage.getData().get("inviteId");
+            String allianceId = remoteMessage.getData().get("allianceId");
+            String text = remoteMessage.getData().get("body");
             String title = remoteMessage.getData().get("title");
-            String body = remoteMessage.getData().get("body");
-            String actionId = remoteMessage.getData().get("actionId");  // Moguće da šalješ ID poziva za koji treba da prihvatiš/odbiješ
+            String senderEmail = remoteMessage.getData().get("senderEmail");
 
-            // Kreiraj i prikaži notifikaciju
-            sendNotification(title, body, actionId);
+            showInvitationNotification(action, inviteId, allianceId, text, title, senderEmail);
         }
     }
 
-    private void sendNotification(String title, String body, String actionId) {
-        // Kreiraj Intent za prihvatanje
-        Intent acceptIntent = new Intent(this, MainActivity.class);  // Aktivnost koja će obraditi odgovor
+    private void showInvitationNotification(String action, String inviteId, String allianceId, String text, String title, String senderEmail) {
+        Intent acceptIntent = new Intent(this, NotificationReceiver.class);
         acceptIntent.putExtra("action", "accept");
-        acceptIntent.putExtra("actionId", actionId);  // Dodaj ID poziva za koji korisnik treba da odgovori
-        PendingIntent acceptPendingIntent = PendingIntent.getActivity(this, 0, acceptIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        acceptIntent.putExtra("inviteId", inviteId);
+        acceptIntent.putExtra("allianceId", allianceId);
+        acceptIntent.putExtra("senderEmail", senderEmail);
+        PendingIntent acceptPendingIntent = PendingIntent.getBroadcast(this, 0, acceptIntent, PendingIntent.FLAG_IMMUTABLE);
 
-        // Kreiraj Intent za odbijanje
-        Intent rejectIntent = new Intent(this, MainActivity.class);
+        Intent rejectIntent = new Intent(this, NotificationReceiver.class);
         rejectIntent.putExtra("action", "reject");
-        rejectIntent.putExtra("actionId", actionId);  // Dodaj ID poziva za koji korisnik treba da odgovori
-        PendingIntent rejectPendingIntent = PendingIntent.getActivity(this, 0, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        rejectIntent.putExtra("inviteId", inviteId);
+        rejectIntent.putExtra("allianceId", allianceId);
+        rejectIntent.putExtra("senderEmail", senderEmail);
+        PendingIntent rejectPendingIntent = PendingIntent.getBroadcast(this, 1, rejectIntent, PendingIntent.FLAG_IMMUTABLE);
 
-        // Kreiraj notifikaciju sa akcijama
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "default")
+        // Kreiranje kanala ako je API 26+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channelId = "channel_id";
+            CharSequence channelName = "Alliance Invites";
+            String channelDescription = "Notifications for Alliance invites";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
+            channel.setDescription(channelDescription);
+
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        Notification notification = new NotificationCompat.Builder(this, "channel_id")
                 .setContentTitle(title)
-                .setContentText(body)
-                .setSmallIcon(R.drawable.ic_notification)  // Postavi odgovarajući resurs ikone
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .addAction(R.drawable.ic_add_person, "Prihvati", acceptPendingIntent)
-                .addAction(R.drawable.gloves, "Odbij", rejectPendingIntent);
+                .setContentText(text)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setOngoing(true)
+                .addAction(R.drawable.ic_accept, "Prihvati", acceptPendingIntent)
+                .addAction(R.drawable.ic_reject, "Odbij", rejectPendingIntent)
+                .setAutoCancel(false)
+                .build();
 
-        // Prikazivanje notifikacije
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(0, notificationBuilder.build());
+        notificationManager.notify(1, notification);
     }
 }

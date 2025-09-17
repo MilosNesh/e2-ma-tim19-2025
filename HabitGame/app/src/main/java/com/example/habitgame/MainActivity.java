@@ -1,5 +1,7 @@
 package com.example.habitgame;
 
+import static java.security.AccessController.getContext;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -35,6 +37,7 @@ import com.example.habitgame.services.AccountService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends AppCompatActivity {
@@ -164,6 +167,12 @@ public class MainActivity extends AppCompatActivity {
                 drawer.closeDrawers();
                 return true;
             }
+            else if (id == R.id.allianceFragment) {
+                navController.navigate(R.id.allianceFragment);
+                actionBar.setTitle(R.string.alliance);
+                drawer.closeDrawers();
+                return true;
+            }
 
             boolean handled = NavigationUI.onNavDestinationSelected(item, navController);
             if (handled) {
@@ -172,8 +181,8 @@ public class MainActivity extends AppCompatActivity {
             return handled;
         });
 
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
+//        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+//        StrictMode.setThreadPolicy(policy);
     }
 
     private void getFMCToken(String email) {

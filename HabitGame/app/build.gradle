@@ -7,10 +7,6 @@ android {
     namespace 'com.example.habitgame'
     compileSdk 36
 
-    packagingOptions {
-        exclude("META-INF/DEPENDENCIES")
-    }
-
     defaultConfig {
         applicationId "com.example.habitgame"
         minSdk 30
@@ -50,7 +46,6 @@ dependencies {
     implementation libs.navigation.ui
     implementation libs.firebase.messaging
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation 'com.google.auth:google-auth-library-oauth2-http:1.19.0'
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core

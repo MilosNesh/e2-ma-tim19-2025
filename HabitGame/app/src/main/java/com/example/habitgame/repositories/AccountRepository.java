@@ -309,4 +309,85 @@ public class AccountRepository {
                     }
                 });
     }
+
+    public static Task<Account> updateAlliance(String email, String allianceId) {
+        TaskCompletionSource<Account> taskCompletionSource = new TaskCompletionSource<>();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("accounts")
+                .whereEqualTo("email", email)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (!querySnapshot.isEmpty()) {
+                        DocumentSnapshot document = querySnapshot.getDocuments().get(0);
+                        String accountId = document.getId();
+
+                        // Ažuriraj allianceId
+                        document.getReference().update("allianceId", allianceId)
+                                .addOnSuccessListener(aVoid -> {
+                                    Log.d("REZ_DB", "AllianceId updated");
+
+                                    // Ponovo učitaj dokument i konvertuj u Account objekat
+                                    db.collection("accounts")
+                                            .document(accountId)
+                                            .get()
+                                            .addOnSuccessListener(updatedDoc -> {
+                                                if (updatedDoc.exists()) {
+                                                    Account updatedAccount = updatedDoc.toObject(Account.class);
+                                                    taskCompletionSource.setResult(updatedAccount);
+                                                } else {
+                                                    taskCompletionSource.setResult(null);
+                                                }
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                taskCompletionSource.setResult(null);
+                                            });
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("REZ_DB", "Failed to update allianceId", e);
+                                    taskCompletionSource.setResult(null);
+                                });
+
+                    } else {
+                        Log.w("REZ_DB", "Nalog sa email-om nije pronađen");
+                        taskCompletionSource.setResult(null);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("REZ_DB", "Greška pri pretrazi naloga po emailu", e);
+                    taskCompletionSource.setResult(null);
+                });
+
+        return taskCompletionSource.getTask();
+    }
+
+    public static Task<List<Account>> getByAlliance(String allianceId) {
+        TaskCompletionSource<List<Account>> taskCompletionSource = new TaskCompletionSource<>();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("accounts")
+                .whereEqualTo("allianceId", allianceId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        List<Account> accounts = new ArrayList<>();
+                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                            Account account = document.toObject(Account.class);
+                            accounts.add(account);
+                        }
+                        taskCompletionSource.setResult(accounts);
+                    } else {
+                        Log.d("NoAccountsFound", "Nema korisnika sa tim allianceId");
+                        taskCompletionSource.trySetResult(new ArrayList<>());
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirebaseError", "Greška prilikom pretrage korisnika: ", e);
+                    taskCompletionSource.setException(e);
+                });
+
+        return taskCompletionSource.getTask();
+    }
+
 }

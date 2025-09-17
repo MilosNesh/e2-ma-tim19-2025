@@ -19,6 +19,7 @@ public class Account {
     private long registrationTimestamp;
     private List<String> friends;
     private String fcmToken;
+    private String allianceId;
     public Account(){
     }
 
@@ -155,5 +156,13 @@ public class Account {
 
     public void setFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
+    }
+
+    public String getAllianceId() {
+        return allianceId;
+    }
+
+    public void setAllianceId(String allianceId) {
+        this.allianceId = allianceId;
     }
 }
