@@ -238,4 +238,16 @@ public class AccountService {
             callback.onResult(accountList);
         });
     }
+
+    public void leaveAlliance(String email, StringCallback callback) {
+        updateAlliance(email, "", new AccountCallback() {
+            @Override
+            public void onResult(Account account) {
+                if(account != null)
+                    callback.onResult("Napustili ste savez!");
+                else
+                    callback.onResult("Greska prilikom napustanja saveza!");
+            }
+        });
+    }
 }

@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Build;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.example.habitgame.R;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -27,6 +28,14 @@ public class NotificationService extends FirebaseMessagingService {
             String senderEmail = remoteMessage.getData().get("senderEmail");
 
             showInvitationNotification(action, inviteId, allianceId, text, title, senderEmail);
+        }
+
+        if (remoteMessage.getNotification() != null) {
+            String title = remoteMessage.getNotification().getTitle();
+            String body = remoteMessage.getNotification().getBody();
+
+            // Prikaz sistema notifikacije
+            showNotification(title, body);
         }
     }
 
@@ -70,5 +79,38 @@ public class NotificationService extends FirebaseMessagingService {
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(1, notification);
+    }
+
+    private void showNotification(String title, String message) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channelId = "channel_id2";
+            CharSequence channelName = "Alliance Invite accepted";
+            String channelDescription = "Notifications for Alliance invite accepted";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
+            channel.setDescription(channelDescription);
+
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannel(channel);
+        }
+//        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "channel_id2")
+//                .setContentTitle(title)
+//                .setContentText(message)
+//                .setSmallIcon(R.drawable.ic_notification)
+//                .setPriority(NotificationCompat.PRIORITY_HIGH);
+//
+//        NotificationManagerCompat manager = NotificationManagerCompat.from(this);
+//        manager.notify(1, builder.build());
+
+
+        Notification notification = new NotificationCompat.Builder(this, "channel_id")
+                .setContentTitle(title)
+                .setContentText(message)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setAutoCancel(true)
+                .build();
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify((int) System.currentTimeMillis(), notification);
     }
 }

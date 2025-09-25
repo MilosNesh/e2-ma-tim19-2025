@@ -10,28 +10,29 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp">
-
-    <Button
-        android:id="@+id/leave_alliance"
+    <RelativeLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/leave"/>
-    <Button
-        android:id="@+id/delete_alliance"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/delete"/>
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:src="@drawable/alliance"/>
-
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/leave_alliance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:text="@string/leave"/>
+        <Button
+            android:id="@+id/delete_alliance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:text="@string/delete"/>
+    </RelativeLayout>
     <TextView
         android:id="@+id/alliance_name_"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="30dp"
-        android:text="@string/alliance"
         android:layout_marginBottom="10dp"/>
 
     <TextView

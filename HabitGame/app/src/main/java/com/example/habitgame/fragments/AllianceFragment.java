@@ -4,6 +4,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +21,7 @@ import com.example.habitgame.model.Account;
 import com.example.habitgame.model.AccountListCallback;
 import com.example.habitgame.model.Alliance;
 import com.example.habitgame.model.AllianceCallback;
+import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.services.AccountService;
 import com.example.habitgame.services.AllianceService;
 
@@ -34,6 +37,7 @@ public class AllianceFragment extends Fragment {
     private AccountService accountService;
     private ProfileAdapter profileAdapter, leaderAdapter;
     private Button deleteAlliance, leaveAlliance;
+    private SharedPreferences sharedPreferences;
     public AllianceFragment() {
     }
 
@@ -61,16 +65,22 @@ public class AllianceFragment extends Fragment {
 
         leaveAlliance.setVisibility(view.GONE);
         deleteAlliance.setVisibility(view.GONE);
-        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
+        sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
         allainceId = sharedPreferences.getString("allianceId", null);
         myEmail = sharedPreferences.getString("email", null);
 
         allianceService = new AllianceService();
         accountService = new AccountService();
 
+        if(allainceId.equals("")){
+            allianceName.setText("Niste clan ni jednog saveza");
+            return view;
+        }
         allianceService.getById(allainceId, new AllianceCallback() {
             @Override
             public void onResult(Alliance alliance) {
+                if(alliance == null)
+                    return;
                 allianceName.setText(alliance.getName());
                 accountService.getByAlliance(allainceId, new AccountListCallback() {
                     @Override
@@ -113,7 +123,18 @@ public class AllianceFragment extends Fragment {
         leaveAlliance.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(getContext(), "Napusti!", Toast.LENGTH_SHORT).show();
+                accountService.leaveAlliance(myEmail, new StringCallback() {
+                    @Override
+                    public void onResult(String result) {
+                        Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.remove("allianceId");
+                        editor.putString("allianceId", "");
+                        editor.apply();
+                        NavController navController = Navigation.findNavController(requireActivity(), R.id.mainContainer);
+                        navController.navigate(R.id.allianceFragment);
+                    }
+                });
             }
         });
     }

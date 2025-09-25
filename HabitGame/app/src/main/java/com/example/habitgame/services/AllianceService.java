@@ -58,6 +58,8 @@ public class AllianceService {
 
     public void sendAnswer(String token, String usename) {
         try {
+            if(token == null || token.isEmpty())
+                Log.i("Notification token", "Token je prazan");
             JSONObject notificationObject = new JSONObject();
             notificationObject.put("title", "Prihvacen zahtjev");
             notificationObject.put("body", "Korisnik "+usename+" je prihvaio vas poziv u savez,");

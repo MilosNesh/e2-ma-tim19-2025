@@ -4,6 +4,7 @@ import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -25,36 +26,50 @@ public class NotificationReceiver extends BroadcastReceiver {
         String allianceId = intent.getStringExtra("allianceId");
         String senderEmail = intent.getStringExtra("senderEmail");
         Log.i("akcija", action);
-        handleAction(inviteId, allianceId, action, senderEmail);
+        handleAction(inviteId, allianceId, action, senderEmail, context);
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(1);
     }
 
-    private void handleAction(String inviteId, String allianceId, String action, String senderEmail) {
+    private void handleAction(String inviteId, String allianceId, String action, String senderEmail, Context context) {
         if(action.equals("reject")) {
             Log.i("savez notifikacija", "odbijena");
             return;
         }
-        AccountService accountService = new AccountService();
         if(action.equals("accept")) {
+            AccountService accountService = new AccountService();
+            AllianceService allianceService = new AllianceService();
             Log.i("savez notifikacija", "prihvacena");
-            AccountService.updateAlliance(inviteId, allianceId, new AccountCallback() {
+            Log.i("Id saveza", allianceId);
+            accountService.getAccountByEmail(senderEmail, new AccountCallback() {
                 @Override
-                public void onResult(Account account) {
-                    accountService.getAccountByEmail(senderEmail, new AccountCallback() {
+                public void onResult(Account sender) {
+
+                    AccountService.updateAlliance(inviteId, sender.getAllianceId(), new AccountCallback() {
                         @Override
-                        public void onResult(Account sender) {
-                            AllianceService allianceService = new AllianceService();
+                        public void onResult(Account account) {
+                            Log.i("email i token", senderEmail+ "   "+ sender.getFcmToken());
                             allianceService.sendAnswer(sender.getFcmToken(), account.getUsername());
-//                            NavController navController = Navigation.findNavController(context, R.id.mainContainer);
-//                            navController.navigate(R.id.allianceFragment);
+                            saveAllianceIdToSharedPreferences(context, inviteId);
                         }
                     });
                 }
             });
         }
 
+    }
+
+    private void saveAllianceIdToSharedPreferences(Context context, String allianceId) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences("HabitGamePrefs", Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putString("allianceId", allianceId);
+
+        editor.apply();
+
+        Log.i("SharedPreferences", "Alliance ID saved: " + allianceId);
     }
 
 }
