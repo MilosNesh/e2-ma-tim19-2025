@@ -80,42 +80,7 @@ public class AllianceFragment extends Fragment {
             memebersLabel.setVisibility(view.GONE);
             return view;
         }
-        allianceService.getById(allainceId, new AllianceCallback() {
-            @Override
-            public void onResult(Alliance alliance) {
-                if(alliance == null){
-                    allianceName.setText("Niste clan nijednog saveza");
-                    leaderLabel.setVisibility(view.GONE);
-                    memebersLabel.setVisibility(view.GONE);
-                    return;
-                }
-
-                allianceName.setText(alliance.getName());
-                accountService.getByAlliance(allainceId, new AccountListCallback() {
-                    @Override
-                    public void onResult(List<Account> accountList) {
-                        List<Account> leaderList = new ArrayList<>();
-                        for(Account acc : accountList) {
-                            if(acc.getEmail().equals(alliance.getLeader()))
-                                leaderList.add(acc);
-                        }
-                        leaderAdapter =   profileAdapter = new ProfileAdapter(getContext(), leaderList, myEmail, account -> {
-                            Toast.makeText(getContext(), account.getUsername(), Toast.LENGTH_SHORT).show();
-                        });
-                        profileAdapter = new ProfileAdapter(getContext(), accountList, myEmail, account -> {
-                            Toast.makeText(getContext(), account.getUsername(), Toast.LENGTH_SHORT).show();
-                        });
-
-                        leader.setAdapter(leaderAdapter);
-                        memebers.setAdapter(profileAdapter);
-                        if(myEmail.equals(alliance.getLeader()))
-                            deleteAlliance.setVisibility(view.VISIBLE);
-                        else
-                            leaveAlliance.setVisibility(view.VISIBLE);
-                    }
-                });
-            }
-        });
+        loadAlliance(view);
         return view;
     }
 
@@ -153,6 +118,49 @@ public class AllianceFragment extends Fragment {
                         editor.apply();
                         NavController navController = Navigation.findNavController(requireActivity(), R.id.mainContainer);
                         navController.navigate(R.id.allianceFragment);
+                    }
+                });
+            }
+        });
+    }
+
+    private void loadAlliance(View view) {
+        allianceService.getById(allainceId, new AllianceCallback() {
+            @Override
+            public void onResult(Alliance alliance) {
+                if(alliance == null){
+                    allianceName.setText("Niste clan nijednog saveza");
+                    leaderLabel.setVisibility(view.GONE);
+                    memebersLabel.setVisibility(view.GONE);
+                    return;
+                }
+
+                allianceName.setText(alliance.getName());
+                accountService.getByAlliance(allainceId, new AccountListCallback() {
+                    @Override
+                    public void onResult(List<Account> accountList) {
+                        List<Account> leaderList = new ArrayList<>();
+                        List<Account> membersList = new ArrayList<>();
+                        for(Account acc : accountList) {
+                            if(acc.getEmail().equals(alliance.getLeader())){
+                                leaderList.add(acc);
+                                continue;
+                            }
+                            membersList.add(acc);
+                        }
+                        leaderAdapter =   profileAdapter = new ProfileAdapter(getContext(), leaderList, myEmail, getString(R.string.show_profile), account -> {
+                            Toast.makeText(getContext(), account.getUsername(), Toast.LENGTH_SHORT).show();
+                        });
+                        profileAdapter = new ProfileAdapter(getContext(), membersList, myEmail,  getString(R.string.show_profile), account -> {
+                            Toast.makeText(getContext(), account.getUsername(), Toast.LENGTH_SHORT).show();
+                        });
+
+                        leader.setAdapter(leaderAdapter);
+                        memebers.setAdapter(profileAdapter);
+                        if(myEmail.equals(alliance.getLeader()))
+                            deleteAlliance.setVisibility(view.VISIBLE);
+                        else
+                            leaveAlliance.setVisibility(view.VISIBLE);
                     }
                 });
             }

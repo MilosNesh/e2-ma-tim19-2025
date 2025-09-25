@@ -53,7 +53,7 @@ public class ProfileListFragment extends Fragment {
         accountService.getAllExpectMine(myEmail, new AccountListCallback() {
             @Override
             public void onResult(List<Account> accountList) {
-                profileAdapter = new ProfileAdapter(getContext(), accountList, myEmail,account -> {
+                profileAdapter = new ProfileAdapter(getContext(), accountList, myEmail,  getString(R.string.show_profile), account -> {
                     Bundle args = new Bundle();
                     args.putString("email", account.getEmail());
                     NavController navController = Navigation.findNavController(requireActivity(), R.id.mainContainer);

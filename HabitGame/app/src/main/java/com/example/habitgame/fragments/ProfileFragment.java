@@ -25,11 +25,17 @@ import com.example.habitgame.activities.LoginActivity;
 import com.example.habitgame.databinding.FragmentProfileBinding;
 import com.example.habitgame.model.Account;
 import com.example.habitgame.model.AccountCallback;
+import com.example.habitgame.model.Alliance;
+import com.example.habitgame.model.AllianceCallback;
 import com.example.habitgame.model.Equipment;
 import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.repositories.AccountRepository;
 import com.example.habitgame.services.AccountService;
+import com.example.habitgame.services.AllianceService;
 import com.example.habitgame.services.QRCodeService;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -47,7 +53,10 @@ public class ProfileFragment extends Fragment {
     private ImageButton addFriend;
     private LinearLayout statsSection;
     private AccountService accountService;
+    private AllianceService allianceService;
     private Account showedAccount;
+    private Button inviteButton;
+    private Alliance alliance;
     public ProfileFragment() {
 
     }
@@ -92,11 +101,13 @@ public class ProfileFragment extends Fragment {
         statsSection = binding.statsSection;
         addFriend = binding.addFriend;
         qrCode = binding.qrcode;
+        inviteButton = binding.inviteButton;
 
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
         String myEmail = sharedPreferences.getString("email", null);
-
+        String allianceId = sharedPreferences.getString("allianceId", "");
         addFriend.setVisibility(view.GONE);
+        inviteButton.setVisibility(View.GONE);
         if(!myEmail.equals(email)){
             statsSection.setVisibility(view.GONE);
         }
@@ -106,6 +117,7 @@ public class ProfileFragment extends Fragment {
 
         QRCodeService qrCodeService = new QRCodeService();
         accountService = new AccountService();
+        allianceService = new AllianceService();
         accountService.getAccountByEmail(email, new AccountCallback() {
             @Override
             public void onResult(Account account) {
@@ -125,6 +137,18 @@ public class ProfileFragment extends Fragment {
                     addFriend.setVisibility(view.VISIBLE);
                 }
                 qrCode.setImageBitmap(qrCodeService.generateQRCode(account.getEmail()));
+
+                allianceService.getById(allianceId, new AllianceCallback() {
+                    @Override
+                    public void onResult(Alliance a) {
+                        if(a != null){
+                            if(account.getFriends().contains(myEmail) && !account.getAllianceId().equals(allianceId) && a.getLeader().equals(myEmail)){
+                                inviteButton.setVisibility(view.VISIBLE);
+                            }
+                        }
+                    }
+                });
+
             }
         });
 
@@ -136,6 +160,21 @@ public class ProfileFragment extends Fragment {
                     public void onResult(String result) {
                         Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
                         addFriend.setVisibility(view.GONE);
+                    }
+                });
+            }
+        });
+
+        inviteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                allianceService.getById(allianceId, new AllianceCallback() {
+                    @Override
+                    public void onResult(Alliance alliance) {
+                        List<Account> accountList = new ArrayList<>();
+                        accountList.add(showedAccount);
+                        allianceService.sendAllianceInvite(allianceId, alliance.getName(), accountList, myEmail);
+                        inviteButton.setVisibility(view.GONE);
                     }
                 });
             }

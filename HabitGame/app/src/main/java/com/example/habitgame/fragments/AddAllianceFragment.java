@@ -77,7 +77,7 @@ public class AddAllianceFragment extends Fragment {
         accountService.getAllFriends(myEmail, new AccountListCallback() {
             @Override
             public void onResult(List<Account> result) {
-                profileAdapter = new ProfileAdapter(getContext(), result, myEmail, account -> {
+                profileAdapter = new ProfileAdapter(getContext(), result, myEmail, getString(R.string.add_to_alliance), account -> {
                     Toast.makeText(getContext(), account.getUsername(), Toast.LENGTH_SHORT).show();
                     accountList.add(account);
                 });

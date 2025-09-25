@@ -43,4 +43,6 @@
     <string name="alliance">Savez</string>
     <string name="leave">Napusti</string>
     <string name="delete">Obrisi</string>
+    <string name="add_to_alliance">Dodaj u savez</string>
+    <string name="invite_to_alliance">Pozovi u savez</string>
 </resources>
