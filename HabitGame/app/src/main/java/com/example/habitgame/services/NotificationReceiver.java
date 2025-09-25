@@ -51,7 +51,7 @@ public class NotificationReceiver extends BroadcastReceiver {
                         public void onResult(Account account) {
                             Log.i("email i token", senderEmail+ "   "+ sender.getFcmToken());
                             allianceService.sendAnswer(sender.getFcmToken(), account.getUsername());
-                            saveAllianceIdToSharedPreferences(context, inviteId);
+                            saveAllianceIdToSharedPreferences(context, sender.getAllianceId());
                         }
                     });
                 }
@@ -64,7 +64,7 @@ public class NotificationReceiver extends BroadcastReceiver {
         SharedPreferences sharedPreferences = context.getSharedPreferences("HabitGamePrefs", Context.MODE_PRIVATE);
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
-
+        editor.remove("allianceId");
         editor.putString("allianceId", allianceId);
 
         editor.apply();

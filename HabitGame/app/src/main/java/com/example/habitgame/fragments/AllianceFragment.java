@@ -30,7 +30,7 @@ import java.util.List;
 
 public class AllianceFragment extends Fragment {
 
-    private TextView allianceName;
+    private TextView allianceName, leaderLabel, memebersLabel;
     private ListView memebers, leader;
     private String allainceId, myEmail;
     private AllianceService allianceService;
@@ -62,6 +62,8 @@ public class AllianceFragment extends Fragment {
         leader = view.findViewById(R.id.leader);
         deleteAlliance = view.findViewById(R.id.delete_alliance);
         leaveAlliance = view.findViewById(R.id.leave_alliance);
+        leaderLabel = view.findViewById(R.id.leader_label);
+        memebersLabel = view.findViewById(R.id.members_label);
 
         leaveAlliance.setVisibility(view.GONE);
         deleteAlliance.setVisibility(view.GONE);
@@ -73,14 +75,21 @@ public class AllianceFragment extends Fragment {
         accountService = new AccountService();
 
         if(allainceId.equals("")){
-            allianceName.setText("Niste clan ni jednog saveza");
+            allianceName.setText("Niste clan nijednog saveza");
+            leaderLabel.setVisibility(view.GONE);
+            memebersLabel.setVisibility(view.GONE);
             return view;
         }
         allianceService.getById(allainceId, new AllianceCallback() {
             @Override
             public void onResult(Alliance alliance) {
-                if(alliance == null)
+                if(alliance == null){
+                    allianceName.setText("Niste clan nijednog saveza");
+                    leaderLabel.setVisibility(view.GONE);
+                    memebersLabel.setVisibility(view.GONE);
                     return;
+                }
+
                 allianceName.setText(alliance.getName());
                 accountService.getByAlliance(allainceId, new AccountListCallback() {
                     @Override
@@ -116,7 +125,18 @@ public class AllianceFragment extends Fragment {
         deleteAlliance.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(getContext(), "Brisi!", Toast.LENGTH_SHORT).show();
+                allianceService.deleteAlliance(allainceId, new StringCallback() {
+                    @Override
+                    public void onResult(String result) {
+                        Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.remove("allianceId");
+                        editor.putString("allianceId", "");
+                        editor.apply();
+                        NavController navController = Navigation.findNavController(requireActivity(), R.id.mainContainer);
+                        navController.navigate(R.id.allianceFragment);
+                    }
+                });
             }
         });
 
