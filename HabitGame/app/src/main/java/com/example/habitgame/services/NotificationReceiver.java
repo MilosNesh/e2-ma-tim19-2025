@@ -1,5 +1,6 @@
 package com.example.habitgame.services;
 
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,6 +12,7 @@ import android.widget.Toast;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.example.habitgame.MainActivity;
 import com.example.habitgame.R;
 import com.example.habitgame.model.Account;
 import com.example.habitgame.model.AccountCallback;
@@ -29,7 +31,7 @@ public class NotificationReceiver extends BroadcastReceiver {
         handleAction(inviteId, allianceId, action, senderEmail, context);
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(1);
+        notificationManager.cancel(inviteId.hashCode());
     }
 
     private void handleAction(String inviteId, String allianceId, String action, String senderEmail, Context context) {
@@ -40,7 +42,6 @@ public class NotificationReceiver extends BroadcastReceiver {
         if(action.equals("accept")) {
             AccountService accountService = new AccountService();
             AllianceService allianceService = new AllianceService();
-            Log.i("savez notifikacija", "prihvacena");
             Log.i("Id saveza", allianceId);
             accountService.getAccountByEmail(senderEmail, new AccountCallback() {
                 @Override
@@ -52,6 +53,11 @@ public class NotificationReceiver extends BroadcastReceiver {
                             Log.i("email i token", senderEmail+ "   "+ sender.getFcmToken());
                             allianceService.sendAnswer(sender.getFcmToken(), account.getUsername());
                             saveAllianceIdToSharedPreferences(context, sender.getAllianceId());
+
+                            Intent intent = new Intent(context, MainActivity.class);
+                            intent.putExtra("navigateTo", "allianceFragment");
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(intent);
                         }
                     });
                 }

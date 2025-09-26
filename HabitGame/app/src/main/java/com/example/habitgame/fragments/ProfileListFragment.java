@@ -44,7 +44,7 @@ public class ProfileListFragment extends Fragment {
 
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
         myEmail = sharedPreferences.getString("email", null);
-        allianceId = sharedPreferences.getString("allianceId", null);
+        allianceId = sharedPreferences.getString("allianceId", "");
 
         if(!allianceId.equals("")) {
             addAlianceButton.setVisibility(view.GONE);

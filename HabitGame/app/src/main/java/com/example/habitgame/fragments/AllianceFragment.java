@@ -68,7 +68,7 @@ public class AllianceFragment extends Fragment {
         leaveAlliance.setVisibility(view.GONE);
         deleteAlliance.setVisibility(view.GONE);
         sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
-        allainceId = sharedPreferences.getString("allianceId", null);
+        allainceId = sharedPreferences.getString("allianceId", "");
         myEmail = sharedPreferences.getString("email", null);
 
         allianceService = new AllianceService();

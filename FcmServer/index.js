@@ -17,7 +17,8 @@ app.post('/send', async (req, res) => {
   try {
     const message = {
       token: token,
-      notification: {
+      data: {
+        action: 'none',
         title: title,
         body: body,
       },

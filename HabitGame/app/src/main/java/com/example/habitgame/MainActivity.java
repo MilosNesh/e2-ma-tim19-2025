@@ -72,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
         drawer.addDrawerListener(actionBarDrawerToggle);
         actionBarDrawerToggle.syncState();
 
-
         navController = Navigation.findNavController(this, R.id.mainContainer);
         NavigationUI.setupWithNavController(navigationView, navController);
 
@@ -120,9 +119,21 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         }
-        
-        
+
+
         getFMCToken(email);
+
+        // Dobijamo informaciju iz Intent-a
+        String navigateTo = getIntent().getStringExtra("navigateTo");
+
+        // Ako je "navigateTo" setovano, navigiraj na odgovarajući fragment
+        if ("allianceFragment".equals(navigateTo)) {
+            NavController navController = Navigation.findNavController(this, R.id.mainContainer);
+            navController.navigate(R.id.allianceFragment);
+        } else if ("messagesFragment".equals(navigateTo)) {
+            NavController navController = Navigation.findNavController(this, R.id.mainContainer);
+            navController.navigate(R.id.messagesFragment);
+        }
 
         // 2. Rukovanje klikovima u meniju (logout ručno)
         navigationView.setNavigationItemSelectedListener(item -> {

@@ -133,21 +133,23 @@ public class ProfileFragment extends Fragment {
                 badgeLabel.setText(bl);
                 setBudges(account);
                 setEquipments(account);
-                if(!account.getFriends().contains(myEmail) && !account.getEmail().equals(myEmail)){
+                if (!account.getFriends().contains(myEmail) && !account.getEmail().equals(myEmail)) {
                     addFriend.setVisibility(view.VISIBLE);
                 }
                 qrCode.setImageBitmap(qrCodeService.generateQRCode(account.getEmail()));
 
-                allianceService.getById(allianceId, new AllianceCallback() {
-                    @Override
-                    public void onResult(Alliance a) {
-                        if(a != null){
-                            if(account.getFriends().contains(myEmail) && !account.getAllianceId().equals(allianceId) && a.getLeader().equals(myEmail)){
-                                inviteButton.setVisibility(view.VISIBLE);
+                if (!allianceId.equals("")){
+                    allianceService.getById(allianceId, new AllianceCallback() {
+                        @Override
+                        public void onResult(Alliance a) {
+                            if (a != null) {
+                                if (account.getFriends().contains(myEmail) && !account.getAllianceId().equals(allianceId) && a.getLeader().equals(myEmail)) {
+                                    inviteButton.setVisibility(view.VISIBLE);
+                                }
                             }
                         }
-                    }
-                });
+                    });
+            }
 
             }
         });
@@ -173,7 +175,7 @@ public class ProfileFragment extends Fragment {
                     public void onResult(Alliance alliance) {
                         List<Account> accountList = new ArrayList<>();
                         accountList.add(showedAccount);
-                        allianceService.sendAllianceInvite(allianceId, alliance.getName(), accountList, myEmail);
+                        allianceService.sendAllianceInvite(allianceId, alliance.getName(), accountList, alliance.getLeader());
                         inviteButton.setVisibility(view.GONE);
                     }
                 });
