@@ -63,7 +63,7 @@ public class AllianceService {
                 Log.i("Notification token", "Token je prazan");
             JSONObject notificationObject = new JSONObject();
             notificationObject.put("title", "Prihvacen zahtjev");
-            notificationObject.put("body", "Korisnik "+usename+" je prihvaio vas poziv u savez,");
+            notificationObject.put("body", "Korisnik "+usename+" je prihvaio vas poziv u savez.");
             notificationObject.put("token", token);
             callApi(notificationObject, "send");
         } catch (JSONException e) {
@@ -71,7 +71,7 @@ public class AllianceService {
         }
     }
 
-    private void callApi(JSONObject jsonObject, String endpoint){
+    public static void callApi(JSONObject jsonObject, String endpoint){
         MediaType JSON = MediaType.get("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient();
         String url = "https://fcm-server-965j.onrender.com/"+endpoint;

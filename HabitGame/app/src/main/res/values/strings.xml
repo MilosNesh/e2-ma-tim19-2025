@@ -45,4 +45,7 @@
     <string name="delete">Obrisi</string>
     <string name="add_to_alliance">Dodaj u savez</string>
     <string name="invite_to_alliance">Pozovi u savez</string>
+    <string name="messages">Poruke</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="message_hint">Poruka...</string>
 </resources>

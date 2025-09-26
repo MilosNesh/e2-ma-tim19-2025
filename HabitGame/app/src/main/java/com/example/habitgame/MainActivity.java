@@ -173,6 +173,12 @@ public class MainActivity extends AppCompatActivity {
                 drawer.closeDrawers();
                 return true;
             }
+            else if (id == R.id.messagesFragment) {
+                navController.navigate(R.id.messagesFragment);
+                actionBar.setTitle(R.string.messages);
+                drawer.closeDrawers();
+                return true;
+            }
 
             boolean handled = NavigationUI.onNavDestinationSelected(item, navController);
             if (handled) {

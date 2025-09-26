@@ -148,7 +148,7 @@ public class AllianceFragment extends Fragment {
                             }
                             membersList.add(acc);
                         }
-                        leaderAdapter =   profileAdapter = new ProfileAdapter(getContext(), leaderList, myEmail, getString(R.string.show_profile), account -> {
+                        leaderAdapter = new ProfileAdapter(getContext(), leaderList, myEmail, getString(R.string.show_profile), account -> {
                             Toast.makeText(getContext(), account.getUsername(), Toast.LENGTH_SHORT).show();
                         });
                         profileAdapter = new ProfileAdapter(getContext(), membersList, myEmail,  getString(R.string.show_profile), account -> {

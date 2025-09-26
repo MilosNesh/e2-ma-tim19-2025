@@ -31,4 +31,8 @@
         android:name="com.example.habitgame.fragments.AddAllianceFragment"
         android:label="Add Alliance"/>
 
+    <fragment
+        android:id="@+id/messagesFragment"
+        android:name="com.example.habitgame.fragments.MessagesFragment"
+        android:label="@string/messages"/>
 </navigation>
