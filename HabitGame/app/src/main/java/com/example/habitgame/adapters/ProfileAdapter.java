@@ -22,17 +22,19 @@ public class ProfileAdapter extends BaseAdapter {
     private List<Account> accountList;
     private OnShowClickListener onShowClickListener;
     private String email;
+    private String buttonText;
 
     // Interfejs za klik na dugme za prikaz profla
     public interface OnShowClickListener {
         void onShowClick(Account product);
     }
 
-    public ProfileAdapter(Context context, List<Account> accountList, String email, OnShowClickListener onShowClickListener) {
+    public ProfileAdapter(Context context, List<Account> accountList, String email, String buttonText, OnShowClickListener onShowClickListener) {
         this.context = context;
         this.accountList = accountList;
         this.email = email;
         this.onShowClickListener = onShowClickListener;
+        this.buttonText = buttonText;
     }
 
     public void updateList(List<Account> newAccountList) {
@@ -69,6 +71,7 @@ public class ProfileAdapter extends BaseAdapter {
             holder.usernameTextView = convertView.findViewById(R.id.profile_username);
             holder.isFriendTextView = convertView.findViewById(R.id.is_friend);
             holder.showButton = convertView.findViewById(R.id.show_profile);
+            holder.showButton.setText(buttonText);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();

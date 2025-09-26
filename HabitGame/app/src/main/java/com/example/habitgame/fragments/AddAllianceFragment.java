@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.example.habitgame.R;
 import com.example.habitgame.adapters.ProfileAdapter;
 import com.example.habitgame.model.Account;
+import com.example.habitgame.model.AccountCallback;
 import com.example.habitgame.model.AccountListCallback;
 import com.example.habitgame.model.Alliance;
 import com.example.habitgame.model.AllianceCallback;
@@ -76,7 +77,7 @@ public class AddAllianceFragment extends Fragment {
         accountService.getAllFriends(myEmail, new AccountListCallback() {
             @Override
             public void onResult(List<Account> result) {
-                profileAdapter = new ProfileAdapter(getContext(), result, myEmail, account -> {
+                profileAdapter = new ProfileAdapter(getContext(), result, myEmail, getString(R.string.add_to_alliance), account -> {
                     Toast.makeText(getContext(), account.getUsername(), Toast.LENGTH_SHORT).show();
                     accountList.add(account);
                 });
@@ -102,14 +103,21 @@ public class AddAllianceFragment extends Fragment {
                         Toast.makeText(getContext(), "Greska prilikom dodavanja savrza!", Toast.LENGTH_SHORT).show();
                     }
                     else{
-                        allianceService.sendAllianceInvite(result.getId(), result.getName(), accountList, myEmail);
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putString("allianceId", result.getId());
                         editor.apply();
 
-                        Toast.makeText(getContext(), "Savez dodat", Toast.LENGTH_SHORT).show();
-                        NavController navController = Navigation.findNavController(requireActivity(), R.id.mainContainer);
-                        navController.navigate(R.id.allianceFragment);
+                        allianceService.sendAllianceInvite(result.getId(), result.getName(), accountList, myEmail);
+
+                        AccountService.updateAlliance(myEmail, result.getId(), new AccountCallback() {
+                            @Override
+                            public void onResult(Account account) {
+                                Toast.makeText(getContext(), "Savez dodat", Toast.LENGTH_SHORT).show();
+                                NavController navController = Navigation.findNavController(requireActivity(), R.id.mainContainer);
+                                navController.navigate(R.id.allianceFragment);
+                            }
+                        });
+
                     }
                 }
             });

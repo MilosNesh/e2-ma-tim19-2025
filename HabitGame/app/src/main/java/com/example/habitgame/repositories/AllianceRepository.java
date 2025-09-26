@@ -61,4 +61,19 @@ public class AllianceRepository {
 
         return taskCompletionSource.getTask();
     }
+
+    public static Task<String> delete(String id) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        TaskCompletionSource<String> taskCompletionSource = new TaskCompletionSource<>();
+
+        db.collection("alliances")
+                .document(id)
+                .delete()
+                .addOnSuccessListener(runnable -> {
+                    taskCompletionSource.setResult("");
+                }).addOnFailureListener(runnable -> {
+                    taskCompletionSource.setResult("Error");
+                });
+        return taskCompletionSource.getTask();
+    }
 }

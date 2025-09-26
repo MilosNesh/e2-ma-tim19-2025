@@ -30,7 +30,7 @@ public class ProfileListFragment extends Fragment {
     ListView listView;
     EditText searchText;
     ImageButton searchButton;
-    String myEmail;
+    String myEmail, allianceId;
     Button addAlianceButton;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -44,12 +44,16 @@ public class ProfileListFragment extends Fragment {
 
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
         myEmail = sharedPreferences.getString("email", null);
+        allianceId = sharedPreferences.getString("allianceId", "");
 
+        if(!allianceId.equals("")) {
+            addAlianceButton.setVisibility(view.GONE);
+        }
         // Get all accounts initially
         accountService.getAllExpectMine(myEmail, new AccountListCallback() {
             @Override
             public void onResult(List<Account> accountList) {
-                profileAdapter = new ProfileAdapter(getContext(), accountList, myEmail,account -> {
+                profileAdapter = new ProfileAdapter(getContext(), accountList, myEmail,  getString(R.string.show_profile), account -> {
                     Bundle args = new Bundle();
                     args.putString("email", account.getEmail());
                     NavController navController = Navigation.findNavController(requireActivity(), R.id.mainContainer);

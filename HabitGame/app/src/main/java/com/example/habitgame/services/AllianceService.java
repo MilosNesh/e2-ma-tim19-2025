@@ -9,6 +9,7 @@ import com.example.habitgame.model.Account;
 import com.example.habitgame.model.Alliance;
 import com.example.habitgame.model.AllianceCallback;
 import com.example.habitgame.model.StringCallback;
+import com.example.habitgame.repositories.AccountRepository;
 import com.example.habitgame.repositories.AllianceRepository;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -58,9 +59,11 @@ public class AllianceService {
 
     public void sendAnswer(String token, String usename) {
         try {
+            if(token == null || token.isEmpty())
+                Log.i("Notification token", "Token je prazan");
             JSONObject notificationObject = new JSONObject();
             notificationObject.put("title", "Prihvacen zahtjev");
-            notificationObject.put("body", "Korisnik "+usename+" je prihvaio vas poziv u savez,");
+            notificationObject.put("body", "Korisnik "+usename+" je prihvaio vas poziv u savez.");
             notificationObject.put("token", token);
             callApi(notificationObject, "send");
         } catch (JSONException e) {
@@ -68,7 +71,7 @@ public class AllianceService {
         }
     }
 
-    private void callApi(JSONObject jsonObject, String endpoint){
+    public static void callApi(JSONObject jsonObject, String endpoint){
         MediaType JSON = MediaType.get("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient();
         String url = "https://fcm-server-965j.onrender.com/"+endpoint;
@@ -95,6 +98,19 @@ public class AllianceService {
      public void getById(String id, AllianceCallback callback) {
         AllianceRepository.getById(id).addOnSuccessListener(alliance -> {
             callback.onResult(alliance);
+        });
+     }
+
+     public void deleteAlliance(String id, StringCallback callback) {
+        AllianceRepository.delete(id).addOnSuccessListener(res -> {
+            AccountRepository.getByAlliance(id).addOnSuccessListener(accountList -> {
+                for(Account a: accountList){
+                    AccountRepository.updateAlliance(a.getEmail(), "");
+                }
+                callback.onResult("Savez uspjesno obrisan.");
+            });
+        }).addOnFailureListener(res -> {
+            callback.onResult("Dodlo je do greske prilikom brisanja saveza.");
         });
      }
 
