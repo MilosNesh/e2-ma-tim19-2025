@@ -38,14 +38,14 @@ public class AllianceService {
         });
     }
 
-    public void sendAllianceInvite(String allianceId, String allianceName, List<Account> accountList, String leaderEmail) {
+    public void sendAllianceInvite(String allianceId, String allianceName, List<Account> accountList, String leaderEmail, String leaderUsername) {
         Log.i("AllianceInvite", "Veličina liste: " + accountList.size());
 
         for (Account account : accountList) {
             try{
                 JSONObject notificationObject = new JSONObject();
                 notificationObject.put("title", "Savez-"+allianceName);
-                notificationObject.put("body", "Korisnik "+leaderEmail+" Vas poziva u savez "+allianceName+".");
+                notificationObject.put("body", "Korisnik "+leaderUsername+" Vas poziva u savez "+allianceName+".");
                 notificationObject.put("token", account.getFcmToken());
                 notificationObject.put("allianceId", allianceId);
                 notificationObject.put("senderEmail", leaderEmail);
@@ -93,7 +93,7 @@ public class AllianceService {
                 response.close();
             }
         });
-     }
+    }
 
      public void getById(String id, AllianceCallback callback) {
         AllianceRepository.getById(id).addOnSuccessListener(alliance -> {
@@ -114,4 +114,11 @@ public class AllianceService {
         });
      }
 
+     public void getByLeader(String leaderEmail, AllianceCallback callback){
+        AllianceRepository.getByLeader(leaderEmail).addOnSuccessListener(alliance -> {
+            callback.onResult(alliance);
+        }).addOnFailureListener(e -> {
+            callback.onResult(null);
+        });
+     }
 }

@@ -16,6 +16,8 @@ import com.example.habitgame.MainActivity;
 import com.example.habitgame.R;
 import com.example.habitgame.model.Account;
 import com.example.habitgame.model.AccountCallback;
+import com.example.habitgame.model.Alliance;
+import com.example.habitgame.model.AllianceCallback;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,20 +48,31 @@ public class NotificationReceiver extends BroadcastReceiver {
             accountService.getAccountByEmail(senderEmail, new AccountCallback() {
                 @Override
                 public void onResult(Account sender) {
-
-                    AccountService.updateAlliance(inviteId, sender.getAllianceId(), new AccountCallback() {
+                    Log.i("email invite", inviteId);
+                    allianceService.getByLeader(inviteId, new AllianceCallback() {
                         @Override
-                        public void onResult(Account account) {
-                            Log.i("email i token", senderEmail+ "   "+ sender.getFcmToken());
-                            allianceService.sendAnswer(sender.getFcmToken(), account.getUsername());
-                            saveAllianceIdToSharedPreferences(context, sender.getAllianceId());
+                        public void onResult(Alliance alliance) {
+                            if(alliance != null){
+                                Toast.makeText(context, "Imate svoj savez!", Toast.LENGTH_SHORT).show();
+                                Log.i("Alliance for leader", alliance.getName());
+                                return;
+                            }
+                            AccountService.updateAlliance(inviteId, sender.getAllianceId(), new AccountCallback() {
+                                @Override
+                                public void onResult(Account account) {
+                                    Log.i("email i token", senderEmail+ "   "+ sender.getFcmToken());
+                                    allianceService.sendAnswer(sender.getFcmToken(), account.getUsername());
+                                    saveAllianceIdToSharedPreferences(context, sender.getAllianceId());
 
-                            Intent intent = new Intent(context, MainActivity.class);
-                            intent.putExtra("navigateTo", "allianceFragment");
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(intent);
+                                    Intent intent = new Intent(context, MainActivity.class);
+                                    intent.putExtra("navigateTo", "allianceFragment");
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    context.startActivity(intent);
+                                }
+                            });
                         }
                     });
+
                 }
             });
         }

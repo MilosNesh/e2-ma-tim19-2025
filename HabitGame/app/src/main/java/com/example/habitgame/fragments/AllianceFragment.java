@@ -24,6 +24,7 @@ import com.example.habitgame.model.AllianceCallback;
 import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.services.AccountService;
 import com.example.habitgame.services.AllianceService;
+import com.example.habitgame.services.MessageService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,6 +94,7 @@ public class AllianceFragment extends Fragment {
                 allianceService.deleteAlliance(allainceId, new StringCallback() {
                     @Override
                     public void onResult(String result) {
+                        MessageService.deleteForAlliance(allainceId);
                         Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.remove("allianceId");

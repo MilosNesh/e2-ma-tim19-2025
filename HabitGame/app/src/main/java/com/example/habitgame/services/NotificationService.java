@@ -54,9 +54,13 @@ public class NotificationService extends FirebaseMessagingService {
         // Kreiranje kanala ako je API 26+
         createNotificationChannel("channel_id", "Alliance Invites", "Notifications for Alliance invites");
 
+        NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
+        bigTextStyle.bigText(text);
+
         Notification notification = new NotificationCompat.Builder(this, "channel_id")
                 .setContentTitle(title)
                 .setContentText(text)
+                .setStyle(bigTextStyle)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setOngoing(true)
                 .addAction(R.drawable.ic_accept, "Prihvati", acceptPendingIntent)
@@ -98,9 +102,13 @@ public class NotificationService extends FirebaseMessagingService {
 
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
+        bigTextStyle.bigText(message);
+
         Notification notification = new NotificationCompat.Builder(this, "channel_id2")
                 .setContentTitle(title)
                 .setContentText(message)
+                .setStyle(bigTextStyle)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
