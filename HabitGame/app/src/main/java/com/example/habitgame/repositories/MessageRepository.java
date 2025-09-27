@@ -63,4 +63,19 @@ public class MessageRepository {
         return taskCompletionSource.getTask();
     }
 
+    public static void deleteByAlliance(String allianceId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("messages")
+                .whereEqualTo("allianceId", allianceId)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            document.getReference().delete();
+                        }
+                    }
+                });
+        }
+
 }

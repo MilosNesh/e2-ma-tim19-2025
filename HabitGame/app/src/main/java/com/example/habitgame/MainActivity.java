@@ -130,9 +130,11 @@ public class MainActivity extends AppCompatActivity {
         if ("allianceFragment".equals(navigateTo)) {
             NavController navController = Navigation.findNavController(this, R.id.mainContainer);
             navController.navigate(R.id.allianceFragment);
+            actionBar.setTitle(R.string.alliance);
         } else if ("messagesFragment".equals(navigateTo)) {
             NavController navController = Navigation.findNavController(this, R.id.mainContainer);
             navController.navigate(R.id.messagesFragment);
+            actionBar.setTitle(R.string.messages);
         }
 
         // 2. Rukovanje klikovima u meniju (logout ručno)

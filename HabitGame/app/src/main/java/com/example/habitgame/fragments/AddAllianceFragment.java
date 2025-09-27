@@ -38,7 +38,7 @@ public class AddAllianceFragment extends Fragment {
     private Button addAlliance;
     private ListView listView;
     private AccountService accountService;
-    private String myEmail;
+    private String myEmail, myUsername;
     private ProfileAdapter profileAdapter;
     private AllianceService allianceService;
     private List<Account> accountList;
@@ -72,7 +72,7 @@ public class AddAllianceFragment extends Fragment {
         accountList = new ArrayList<>();
         sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
         myEmail = sharedPreferences.getString("email", null);
-
+        myUsername = sharedPreferences.getString("username", "");
         // Get all accounts initially
         accountService.getAllFriends(myEmail, new AccountListCallback() {
             @Override
@@ -107,7 +107,7 @@ public class AddAllianceFragment extends Fragment {
                         editor.putString("allianceId", result.getId());
                         editor.apply();
 
-                        allianceService.sendAllianceInvite(result.getId(), result.getName(), accountList, myEmail);
+                        allianceService.sendAllianceInvite(result.getId(), result.getName(), accountList, myEmail, myUsername);
 
                         AccountService.updateAlliance(myEmail, result.getId(), new AccountCallback() {
                             @Override

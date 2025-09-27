@@ -106,6 +106,7 @@ public class ProfileFragment extends Fragment {
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
         String myEmail = sharedPreferences.getString("email", null);
         String allianceId = sharedPreferences.getString("allianceId", "");
+        String myUsername = sharedPreferences.getString("username", "");
         addFriend.setVisibility(view.GONE);
         inviteButton.setVisibility(View.GONE);
         if(!myEmail.equals(email)){
@@ -175,7 +176,7 @@ public class ProfileFragment extends Fragment {
                     public void onResult(Alliance alliance) {
                         List<Account> accountList = new ArrayList<>();
                         accountList.add(showedAccount);
-                        allianceService.sendAllianceInvite(allianceId, alliance.getName(), accountList, alliance.getLeader());
+                        allianceService.sendAllianceInvite(allianceId, alliance.getName(), accountList, alliance.getLeader(), myUsername);
                         inviteButton.setVisibility(view.GONE);
                     }
                 });

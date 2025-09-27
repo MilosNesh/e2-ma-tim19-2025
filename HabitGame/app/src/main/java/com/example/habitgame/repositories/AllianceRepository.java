@@ -5,6 +5,7 @@ import com.example.habitgame.model.AllianceCallback;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -75,5 +76,28 @@ public class AllianceRepository {
                     taskCompletionSource.setResult("Error");
                 });
         return taskCompletionSource.getTask();
+    }
+
+    public static Task<Alliance> getByLeader(String leaderEmail) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        TaskCompletionSource<Alliance> taskCompletionSource = new TaskCompletionSource<>();
+
+        db.collection("alliances")
+                .whereEqualTo("leader", leaderEmail)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if(!queryDocumentSnapshots.isEmpty()) {
+                        DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
+                        Alliance alliance = document.toObject(Alliance.class);
+                        taskCompletionSource.setResult(alliance);
+                    }
+                    else{
+                        taskCompletionSource.setResult(null);
+                    }
+                }).addOnFailureListener(runnable -> {
+                    taskCompletionSource.setResult(null);
+                });
+       return taskCompletionSource.getTask();
     }
 }
