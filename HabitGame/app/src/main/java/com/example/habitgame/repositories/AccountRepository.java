@@ -172,6 +172,11 @@ public class AccountRepository {
                         updates.put("equipments", account.getEquipments());
                         updates.put("coins", account.getCoins());
                         updates.put("friends", account.getFriends());
+                        updates.put("title", account.getTitle());
+                        updates.put("level", account.getLevel());
+                        updates.put("experiencePoints", account.getExperiencePoints());
+                        updates.put("powerPoints", account.getPowerPoints());
+                        updates.put("badgeNumbers", account.getBadgeNumbers());
                         docRef.update(updates)
                                 .addOnSuccessListener(aVoid ->
                                         Log.d("REZ_DB", "Successfully updated user: " + account.getEmail()))

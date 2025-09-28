@@ -26,6 +26,10 @@
             android:title="@string/messages"
             android:icon="@drawable/ic_message"
             android:orderInCategory="100"/>
+        <item android:id="@+id/progressFragment"
+            android:title="@string/progress"
+            android:icon="@drawable/ic_progress"
+            android:orderInCategory="100"/>
 
         <item android:id="@+id/shopFragment"
             android:title="@string/shop"

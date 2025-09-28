@@ -35,4 +35,8 @@
         android:id="@+id/messagesFragment"
         android:name="com.example.habitgame.fragments.MessagesFragment"
         android:label="@string/messages"/>
+    <fragment
+        android:id="@+id/progressFragment"
+        android:name="com.example.habitgame.fragments.ProgressFragment"
+        android:label="@string/progress"/>
 </navigation>

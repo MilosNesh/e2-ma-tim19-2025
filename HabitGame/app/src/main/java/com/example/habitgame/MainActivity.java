@@ -192,6 +192,12 @@ public class MainActivity extends AppCompatActivity {
                 drawer.closeDrawers();
                 return true;
             }
+            else if (id == R.id.progressFragment) {
+                navController.navigate(R.id.progressFragment);
+                actionBar.setTitle(R.string.progress);
+                drawer.closeDrawers();
+                return true;
+            }
 
             boolean handled = NavigationUI.onNavDestinationSelected(item, navController);
             if (handled) {
