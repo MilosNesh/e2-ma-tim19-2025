@@ -165,4 +165,37 @@ public class Account {
     public void setAllianceId(String allianceId) {
         this.allianceId = allianceId;
     }
+
+    public int countMaxXp() {
+        int maxXp = 200;
+        for(int i = 0; i < level; i++){
+            maxXp = maxXp * 2 + maxXp / 2;
+            maxXp= ((maxXp + 99) / 100) * 100;
+        }
+        return maxXp;
+    }
+    public int countPP() {
+        int pp = 40;
+        for(int i = 0; i<level; i++){
+            pp = pp + 3/4*pp;
+        }
+        return pp;
+    }
+    public void newTitle(){
+        switch (level){
+            case 0: title = "Pocetnik"; break;
+            case 1: title = "Junior Vitez"; break;
+            case 2: title = "Medior Vitez"; break;
+            case 3: title = "Senior Vitez"; break;
+            case 4: title = "Master Vitez"; break;
+            default: title = "Noob";
+        }
+    }
+    public void addExperiencePoints(int xp) {
+        experiencePoints += xp;
+        if(experiencePoints >= countMaxXp()) {
+            level+=1;
+            newTitle();
+        }
+    }
 }

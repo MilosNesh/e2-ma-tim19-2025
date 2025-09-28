@@ -100,7 +100,7 @@ public class Equipment {
 
     public void calculatePrice(int level){
         double calcPrice = 200;
-        if(level == 1)
+        if(level <= 1)
             calcPrice = 0;
         for(int i=2; i<level; i++){
             calcPrice*=1.2;
