@@ -8,6 +8,15 @@
         android:id="@+id/profileFragment"
         android:name="com.example.habitgame.fragments.ProfileFragment"
         android:label="@string/profile" />
+    <fragment
+        android:id="@+id/taskCreationFragment"
+        android:name="com.example.habitgame.fragments.TaskCreationFragment"
+        android:label="Kreiraj Zadatak" />
+
+    <fragment
+        android:id="@+id/categoryCreationFragment"
+        android:name="com.example.habitgame.fragments.CategoryCreationFragment"
+        android:label="Nova kategorija" />
 
     <fragment
         android:id="@+id/changePasswordFragment"

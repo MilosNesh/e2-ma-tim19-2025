@@ -69,10 +69,21 @@ public class NotificationReceiver extends BroadcastReceiver {
                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                     context.startActivity(intent);
                                 }
+                                @Override
+                                public void onFailure(Exception e) {
+                                    Log.e("NotifReceiver", "Greška pri ažuriranju saveza: ", e);
+                                    Toast.makeText(context, "Greška pri prihvatanju saveza (Update): " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                }
                             });
                         }
                     });
 
+                }
+                @Override
+                public void onFailure(Exception e) {
+                    // NEUSPEH DOHVATA NALOGA POŠILJAOCA
+                    Log.e("NotifReceiver", "Greška pri dohvaćanju naloga pošiljaoca: ", e);
+                    Toast.makeText(context, "Greška pri proveri pošiljaoca (Sender): " + e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
         }

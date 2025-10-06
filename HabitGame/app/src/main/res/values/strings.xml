@@ -24,7 +24,6 @@
     <string name="logout">Odjavi se</string>
     <string name="navigation_drawer_open" translatable="false">Navigation Drawer Open</string>
     <string name="navigation_drawer_close" translatable="false">Navigation Drawer Close</string>
-    <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
@@ -48,4 +47,40 @@
     <string name="messages">Poruke</string>
     <string name="progress">Napredak</string>
     <string name="message_hint">Poruka...</string>
+    <string name="category_creation">Kreiraj kategoriju</string>
+
+    <string name="tasks">Zadaci</string>
+    <string name="create_task">Kreiraj Zadatak</string>
+    <string name="task_name_hint">Naziv Zadatak</string>
+    <string name="task_description_hint">Opis Zadatak (Opciono)</string>
+
+    <string-array name="xp_weights">
+        <item>Veoma lak</item>
+        <item>Lak</item>
+        <item>Tezak</item>
+        <item>Ekstremno tezak</item>
+    </string-array>
+
+    <string-array name="xp_importance">
+        <item>Normalan</item>
+        <item>Vazan</item>
+        <item>Ekstremno vazan</item>
+        <item>Specijalan</item>
+    </string-array>
+
+    <string-array name="repeat_units">
+        <item>dan</item>
+        <item>nedelja</item>
+    </string-array>
+
+    <string-array name="repeat_intervals">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+    </string-array>
+
 </resources>

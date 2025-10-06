@@ -116,6 +116,11 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
                     }
+                    @Override
+                    public void onFailure(Exception e) {
+                        Log.e("QR_Add", "Greška pri dohvaćanju Accounta za prijatelja: ", e);
+                        Toast.makeText(MainActivity.this, "Greška pri učitavanju prijatelja (QR): " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
                 });
             }
         }
@@ -195,6 +200,18 @@ public class MainActivity extends AppCompatActivity {
             else if (id == R.id.progressFragment) {
                 navController.navigate(R.id.progressFragment);
                 actionBar.setTitle(R.string.progress);
+                drawer.closeDrawers();
+                return true;
+            }
+            else if (id == R.id.taskCreationFragment) {
+                navController.navigate(R.id.taskCreationFragment);
+                actionBar.setTitle("Kreiraj Zadatak");
+                drawer.closeDrawers();
+                return true;
+            }
+            else if (id == R.id.categoryCreationFragment) {
+                navController.navigate(R.id.categoryCreationFragment);
+                actionBar.setTitle(R.string.category_creation); // npr. "Nova kategorija"
                 drawer.closeDrawers();
                 return true;
             }

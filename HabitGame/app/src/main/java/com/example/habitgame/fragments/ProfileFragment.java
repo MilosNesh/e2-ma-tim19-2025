@@ -153,6 +153,11 @@ public class ProfileFragment extends Fragment {
             }
 
             }
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("Profile", "Greška pri dohvaćanju saveza", e);
+                Toast.makeText(getContext(), "Greška pri učitavanju saveza: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         });
 
         addFriend.setOnClickListener(new View.OnClickListener() {

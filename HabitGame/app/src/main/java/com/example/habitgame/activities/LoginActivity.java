@@ -79,6 +79,9 @@ public class LoginActivity extends AppCompatActivity {
                            editor.apply();
                        }
                    }
+                   @Override
+                   public void onFailure(Exception e) {
+                       Toast.makeText(LoginActivity.this, "Greška pri dohvaćanju profila: " + e.getMessage(), Toast.LENGTH_LONG).show();}
                });
            }
        }

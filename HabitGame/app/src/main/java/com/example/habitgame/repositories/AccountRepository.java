@@ -116,6 +116,29 @@ public class AccountRepository {
         return taskCompletionSource.getTask();
     }
 
+    public static Task<Account> getAccountById(String userId) {
+        TaskCompletionSource<Account> taskCompletionSource = new TaskCompletionSource<>();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("accounts").document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Account account = documentSnapshot.toObject(Account.class);
+                        taskCompletionSource.setResult(account);
+                    } else {
+                        Log.d("NoUserFound", "Nalog sa ID-om nije pronađen.");
+                        taskCompletionSource.setResult(null);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirebaseError", "Greška prilikom dohvata korisnika po ID-u: ", e);
+                    taskCompletionSource.setException(e);
+                });
+
+        return taskCompletionSource.getTask();
+    }
+
     public Task<Account> selectByEmail(String email){
         TaskCompletionSource<Account> taskCompletionSource = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -365,6 +388,32 @@ public class AccountRepository {
                 });
 
         return taskCompletionSource.getTask();
+    }
+
+    public static Task<Void> updateXp(String userId, int xpEarned) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        return getAccountById(userId)
+                .continueWithTask(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        Account account = task.getResult();
+
+                        account.addExperiencePoints(xpEarned);
+
+                        // 3. Ažuriraj ceo dokument direktno po ID-u
+                        return db.collection("accounts").document(userId).set(account)
+                                .addOnSuccessListener(aVoid -> Log.d("REZ_DB", "XP successfully updated for user: " + userId))
+                                .addOnFailureListener(e -> {
+                                    Log.w("REZ_DB", "Error updating XP for user: " + userId, e);
+                                    throw new RuntimeException(e); // Propagiraj grešku dalje
+                                });
+                    } else {
+                        // Ako dohvat nije uspeo ili je nalog null
+                        Exception e = task.getException() != null ? task.getException() : new Exception("Nalog nije pronađen.");
+                        Log.e("REZ_DB", "Greška pri dohvatanju naloga za XP update.", e);
+                        return com.google.android.gms.tasks.Tasks.forException(e);
+                    }
+                });
     }
 
     public static Task<List<Account>> getByAlliance(String allianceId) {

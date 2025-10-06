@@ -10,10 +10,19 @@
             android:orderInCategory="100" />
 
         <item android:id="@+id/changePasswordFragment"
-            android:title="@string/chage_password"
+            android:title="Promjeni lozinku"
             android:icon="@drawable/ic_key"
             android:orderInCategory="100" />
-
+        <item
+            android:id="@+id/taskCreationFragment"
+            android:title="Kreiraj Zadatak"
+            android:icon="@drawable/ic_add_task"
+            android:orderInCategory="100" />
+        <item
+            android:id="@+id/categoryCreationFragment"
+            android:title="Kreiraj kategoriju"
+            android:icon="@drawable/ic_add_category"
+            android:orderInCategory="100"/>
         <item android:id="@+id/profileListFragment"
             android:title="@string/friends"
             android:icon="@drawable/ic_friends"

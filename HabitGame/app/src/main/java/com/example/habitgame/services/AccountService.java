@@ -248,6 +248,11 @@ public class AccountService {
                 else
                     callback.onResult("Greska prilikom napustanja saveza!");
             }
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("Alliance", "Greška pri napuštanju saveza", e);
+                callback.onResult("Došlo je do greške prilikom napuštanja saveza: " + e.getMessage());
+            }
         });
     }
 }

@@ -116,6 +116,18 @@ public class AddAllianceFragment extends Fragment {
                                 NavController navController = Navigation.findNavController(requireActivity(), R.id.mainContainer);
                                 navController.navigate(R.id.allianceFragment);
                             }
+                            @Override
+                            public void onFailure(Exception e) {
+                                Log.e("AllianceUpdate", "Greška pri ažuriranju Saveza za nalog: ", e);
+
+                                String errorMessage = "Neuspešno dodavanje saveza. Pokušajte ponovo.";
+
+                                if (e != null && e.getMessage() != null && e.getMessage().contains("Alliance ID not found")) {
+                                    errorMessage = "Greška: Navedeni ID Saveza je nevažeći.";
+                                }
+
+                                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                            }
                         });
 
                     }
