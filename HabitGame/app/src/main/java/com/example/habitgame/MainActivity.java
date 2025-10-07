@@ -225,6 +225,12 @@ public class MainActivity extends AppCompatActivity {
                 drawer.closeDrawers();
                 return true;
             }
+            else if (id == R.id.equipmentFragment) {
+                navController.navigate(R.id.equipmentFragment);
+                actionBar.setTitle(R.string.equipment);
+                drawer.closeDrawers();
+                return true;
+            }
 
             boolean handled = NavigationUI.onNavDestinationSelected(item, navController);
             if (handled) {

@@ -82,5 +82,6 @@
         <item>6</item>
         <item>7</item>
     </string-array>
+    <string name="active">Aktiviraj</string>
 
 </resources>

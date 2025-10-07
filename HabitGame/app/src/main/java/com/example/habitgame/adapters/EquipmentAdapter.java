@@ -21,16 +21,19 @@ public class EquipmentAdapter extends BaseAdapter {
     private Context context;
     private List<Equipment> equipmentList;
     private OnBuyClickListener onBuyClickListener;
+    private String buttonText;
+
 
     // Interfejs za klik na dugme "Buy"
     public interface OnBuyClickListener {
         void onBuyClick(Equipment product);
     }
 
-    public EquipmentAdapter(Context context, List<Equipment> equipmentList, OnBuyClickListener onBuyClickListener) {
+    public EquipmentAdapter(Context context, List<Equipment> equipmentList, String buttonText, OnBuyClickListener onBuyClickListener) {
         this.context = context;
         this.equipmentList = equipmentList;
         this.onBuyClickListener = onBuyClickListener;
+        this.buttonText = buttonText;
     }
 
     @Override
@@ -66,10 +69,11 @@ public class EquipmentAdapter extends BaseAdapter {
         }
 
         Equipment equipment = equipmentList.get(position);
-
+        holder.buyButton.setText(buttonText);
         holder.nameTextView.setText(equipment.getName());
         holder.descriptionTextView.setText(equipment.getEffect());
-        holder.priceTextView.setText(String.format("$%.2f", equipment.getPrice()));
+        if(buttonText == "Kupi")
+            holder.priceTextView.setText(String.format("$%.2f", equipment.getPrice()));
         String imageName = equipment.getImage();
         int resID = context.getResources().getIdentifier(imageName, "drawable", context.getPackageName());
 

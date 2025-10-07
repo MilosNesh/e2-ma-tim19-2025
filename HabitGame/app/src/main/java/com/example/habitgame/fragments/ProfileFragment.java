@@ -127,6 +127,7 @@ public class ProfileFragment extends Fragment {
             @Override
             public void onResult(Account account) {
                 showedAccount = account;
+                account.newTitle();
                 avatar.setImageResource(account.getAvatar());
                 username.setText(account.getUsername());
                 levelAndTitle.setText("Lvl " + account.getLevel() + " ~ " + account.getTitle());
