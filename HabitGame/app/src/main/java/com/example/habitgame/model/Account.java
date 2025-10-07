@@ -36,6 +36,7 @@ public class Account {
         this.title = "Baby Knight";
         this.equipments = new ArrayList<>();
         this.friends = new ArrayList<>();
+        this.allianceId = "";
     }
 
     public String getUsername() {

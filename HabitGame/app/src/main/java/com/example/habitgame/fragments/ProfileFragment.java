@@ -51,7 +51,7 @@ public class ProfileFragment extends Fragment {
     private ImageView avatar, qrCode;
     private TextView username, levelAndTitle, pp, xp, coins, badgeLabel;
     private ImageButton addFriend;
-    private LinearLayout statsSection;
+    private LinearLayout statsSection, ppSection, coinsSection;
     private AccountService accountService;
     private AllianceService allianceService;
     private Account showedAccount;
@@ -102,6 +102,8 @@ public class ProfileFragment extends Fragment {
         addFriend = binding.addFriend;
         qrCode = binding.qrcode;
         inviteButton = binding.inviteButton;
+        coinsSection = binding.coinsSection;
+        ppSection = binding.ppSection;
 
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
         String myEmail = sharedPreferences.getString("email", null);
@@ -110,10 +112,12 @@ public class ProfileFragment extends Fragment {
         addFriend.setVisibility(view.GONE);
         inviteButton.setVisibility(View.GONE);
         if(!myEmail.equals(email)){
-            statsSection.setVisibility(view.GONE);
+            coinsSection.setVisibility(view.GONE);
+            ppSection.setVisibility(view.GONE);
         }
         else{
-            statsSection.setVisibility(view.VISIBLE);
+            coinsSection.setVisibility(view.VISIBLE);
+            ppSection.setVisibility(view.VISIBLE);
         }
 
         QRCodeService qrCodeService = new QRCodeService();
