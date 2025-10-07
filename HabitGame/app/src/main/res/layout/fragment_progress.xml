@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+<LinearLayout
     android:id="@+id/userProgressLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -61,4 +64,48 @@
             android:layout_marginBottom="4dp" />
     </RelativeLayout>
 
+    <TextView
+        android:id="@+id/activeDays"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:text="aktivni dani"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="38dp" />
+
+    <!-- LineChart for active days -->
+<!--    <com.github.mikephil.charting.charts.LineChart-->
+<!--        android:id="@+id/lineChartActiveDays"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="300dp"-->
+<!--        android:layout_marginBottom="16dp" />-->
+
+    <!-- PieChart for task statistics -->
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/pieChartTasks"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- BarChart for task completion per category -->
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/barChartCategory"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- LineChart for XP earned in the last 7 days -->
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/lineChartXP"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- BarChart for special mission progress -->
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/barChartSpecialMissions"
+        android:layout_width="match_parent"
+        android:layout_height="300dp" />
+
 </LinearLayout>
+</ScrollView>

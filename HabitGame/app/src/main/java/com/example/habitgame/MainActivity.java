@@ -2,6 +2,7 @@ package com.example.habitgame;
 
 import static java.security.AccessController.getContext;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -39,6 +40,14 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
+
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -127,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         getFMCToken(email);
+        checkActivity(this);
 
         // Dobijamo informaciju iz Intent-a
         String navigateTo = getIntent().getStringExtra("navigateTo");
@@ -235,5 +245,34 @@ public class MainActivity extends AppCompatActivity {
                AccountService.updateFcmTokne(email, token);
            }
         });
+    }
+
+    public void checkActivity(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences("user_activity", Context.MODE_PRIVATE);
+        Set<String> activeDays = prefs.getStringSet("active_days", new HashSet<>());
+
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        if(hasPreviousDay(activeDays, today)){
+            if (!activeDays.contains(today)) {
+                activeDays.add(today);
+                prefs.edit().putStringSet("active_days", activeDays).apply();
+            }
+        }else {
+            activeDays.clear();
+            activeDays.add(today);
+            prefs.edit().clear().apply();
+            prefs.edit().putStringSet("active_days", activeDays).apply();
+        }
+
+    }
+    public boolean hasPreviousDay(Set<String> activeDays, String currentDay) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        LocalDate currentDate = LocalDate.parse(currentDay, formatter);
+        LocalDate previousDate = currentDate.minusDays(1);
+
+        String previousDayStr = previousDate.format(formatter);
+
+        return activeDays.contains(previousDayStr);
     }
 }
