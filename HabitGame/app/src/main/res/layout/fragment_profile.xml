@@ -76,6 +76,7 @@
             android:layout_marginTop="12dp">
 
             <LinearLayout
+                android:id="@+id/pp_section"
                 android:orientation="vertical"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -121,6 +122,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/coins_section"
                 android:orientation="vertical"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

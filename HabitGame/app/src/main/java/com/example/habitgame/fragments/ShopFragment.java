@@ -38,18 +38,22 @@ public class ShopFragment extends Fragment {
         AccountService accountService = new AccountService();
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("HabitGamePrefs", getContext().MODE_PRIVATE);
         String email = sharedPreferences.getString("email", null);
-        int level = sharedPreferences.getInt("level", 1);
+        int level = sharedPreferences.getInt("level", 0);
         equipmentService.getAllForShop(level, new EquipmentListCallback() {
             @Override
             public void onResult(List<Equipment> equipmentList) {
-                equipmentAdapter = new EquipmentAdapter(getContext(), equipmentList, equipment -> {
+                equipmentAdapter = new EquipmentAdapter(getContext(), equipmentList, "Kupi", equipment -> {
 
+                    if(level <= 1) {
+                        Toast.makeText(getContext(), "Ne mozete kupiti, jer ste pocetnik", Toast.LENGTH_SHORT).show();
+                    }else {
                     accountService.buyEquipment(email, equipment, new StringCallback() {
                         @Override
                         public void onResult(String result) {
                             Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
                         }
                     });
+                    }
                 });
 
                 listView.setAdapter(equipmentAdapter);

@@ -28,14 +28,15 @@ public class Account {
         this.email = email;
         this.password = password;
         this.avatar = avatar;
-        this.level = 1;
+        this.level = 0;
         this.powerPoints = 0;
         this.experiencePoints = 0;
         this.coins = 0;
         this.badgeNumbers = 0;
-        this.title = "Baby Knight";
+        this.title = "Pocetnik";
         this.equipments = new ArrayList<>();
         this.friends = new ArrayList<>();
+        this.allianceId = "";
     }
 
     public String getUsername() {

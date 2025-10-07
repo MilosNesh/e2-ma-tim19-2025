@@ -22,6 +22,7 @@ public class Task {
     private Long creationTimestamp;
     private Long lastCompletionTimestamp;
     private int completionsTodayCount;
+    private TaskStatus status;
 
     public Task() {
         this.xpValue = 0;
@@ -109,4 +110,12 @@ public class Task {
 
     public Long getCreationTimestamp() {return creationTimestamp; }
     public void setCreationTimestamp(Long creationTimestamp) { this.creationTimestamp = creationTimestamp; }
+
+    public TaskStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TaskStatus status) {
+        this.status = status;
+    }
 }

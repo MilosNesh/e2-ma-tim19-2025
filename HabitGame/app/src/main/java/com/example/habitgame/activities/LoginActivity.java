@@ -1,5 +1,6 @@
 package com.example.habitgame.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -16,6 +17,14 @@ import com.example.habitgame.model.Account;
 import com.example.habitgame.model.AccountCallback;
 import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.services.AccountService;
+
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 public class LoginActivity extends AppCompatActivity {
 

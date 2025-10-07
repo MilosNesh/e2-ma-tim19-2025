@@ -1,12 +1,15 @@
 package com.example.habitgame.services;
 
 import com.example.habitgame.model.Task;
+import com.example.habitgame.model.TaskStatus;
 import com.example.habitgame.repositories.TaskRepository;
+import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import android.util.Log;
 
 import java.util.Date;
+import java.util.List;
 
 public class TaskService {
 
@@ -43,7 +46,18 @@ public class TaskService {
                 repeatUnit,
                 new Date().getTime()
         );
+        task.setStatus(TaskStatus.KREIRAN);
         return TaskRepository.insert(task);
+    }
+
+    public com.google.android.gms.tasks.Task<List<Task>> getTasksForCurrentUser(){
+        TaskCompletionSource<List<Task>> taskCompletionSource = new TaskCompletionSource<>();
+         TaskRepository.getTasksForCurrentUser()
+            .addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                taskCompletionSource.setResult(task.getResult());
+            }});
+        return taskCompletionSource.getTask();
     }
 
 }

@@ -255,4 +255,8 @@ public class AccountService {
             }
         });
     }
+
+    public void update(Account account) {
+        AccountRepository.update(account);
+    }
 }
