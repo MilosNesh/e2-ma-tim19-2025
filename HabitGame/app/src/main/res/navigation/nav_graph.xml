@@ -2,7 +2,8 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/profileFragment">
+    app:startDestination="@id/profileFragment"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <fragment
         android:id="@+id/profileFragment"
@@ -12,6 +13,33 @@
         android:id="@+id/taskCreationFragment"
         android:name="com.example.habitgame.fragments.TaskCreationFragment"
         android:label="Kreiraj Zadatak" />
+
+    <fragment
+        android:id="@+id/categoryListFragment"
+        android:name="com.example.habitgame.fragments.CategoryListFragment"
+        android:label="Kategorije"
+        tools:layout="@layout/fragment_category_list">
+        <action
+            android:id="@+id/action_categoryListFragment_to_categoryCreationFragment"
+            app:destination="@id/categoryCreationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/tasksPagerFragment"
+        android:name="com.example.habitgame.fragments.TasksPagerFragment"
+        android:label="@string/tasks"
+        tools:layout="@layout/fragment_task_pager" />
+
+    <fragment
+        android:id="@+id/taskListFragment"
+        android:name="com.example.habitgame.fragments.TaskListFragment"
+        android:label="@string/tasks"
+        tools:layout="@layout/fragment_task_list" />
+    <fragment
+        android:id="@+id/tasksCalendarFragment"
+        android:name="com.example.habitgame.fragments.TasksCalendarFragment"
+        android:label="@string/calendar"
+        tools:layout="@layout/fragment_tasks_calendar" />
 
     <fragment
         android:id="@+id/categoryCreationFragment"

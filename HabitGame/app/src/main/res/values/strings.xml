@@ -84,4 +84,30 @@
     </string-array>
     <string name="active">Aktiviraj</string>
 
+    <string name="categories">Kategorije</string>
+    <string name="no_categories">Nema kategorija. Dodaj novu preko +</string>
+    <string name="edit">Izmeni</string>
+    <string name="add_category">Dodaj kategoriju</string>
+
+    <string name="category_name">Naziv kategorije</string>
+    <string name="change_color">Promeni boju</string>
+    <string name="save">Sacuvaj</string>
+    <string name="required">Obavezno polje</string>
+
+    <string name="delete_category_title">Obrisi kategoriju?</string>
+    <string name="delete_category_message">Ova akcija se ne moze ponistiti.</string>
+    <string name="one_time_tasks">Jednokratni</string>
+    <string name="repeating_tasks">Ponavljajući</string>
+    <string name="no_tasks">Nema zadataka.</string>
+    <string name="mark_done">Označi kao urađeno</string>
+    <string name="mark_canceled">Označi kao otkazano</string>
+    <string name="mark_paused">Pauziraj</string>
+    <string name="mark_active">Aktiviraj</string>
+    <string name="repeating">Ponavljajući</string>
+    <string name="one_time">Jednokratni</string>
+    <string name="weight_s">Težina: %1$s</string>
+    <string name="importance_s">Važnost: %1$s</string>
+    <string name="xp_s">XP: %1$d</string>
+    <string name="calendar">Kalendar</string>
+
 </resources>

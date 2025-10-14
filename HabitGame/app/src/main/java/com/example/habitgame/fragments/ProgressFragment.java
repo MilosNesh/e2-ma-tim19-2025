@@ -140,7 +140,7 @@ public class ProgressFragment extends Fragment {
                             switch (t.getStatus()){
                                 case KREIRAN: kreirani++; break;
                                 case URADJEN: uradjeni++; break;
-                                case NEURADJEN: neuradjeni++; break;
+                                case PAUZIRAN: neuradjeni++; break;
                                 case OTKAZAN: otkazani++; break;
                             }
 

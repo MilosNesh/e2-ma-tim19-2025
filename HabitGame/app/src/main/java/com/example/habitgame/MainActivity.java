@@ -84,10 +84,16 @@ public class MainActivity extends AppCompatActivity {
         navController = Navigation.findNavController(this, R.id.mainContainer);
         NavigationUI.setupWithNavController(navigationView, navController);
 
+        Log.i("id avatara ", "neki tag" + R.drawable.avatar1);
+        Log.i("id avatara ", "neki tag" + R.drawable.avatar2);
+        Log.i("id avatara ", "neki tag" + R.drawable.avatar3);
+        Log.i("id avatara ", "neki tag" + R.drawable.avatar4);
+        Log.i("id avatara ", "neki tag" + R.drawable.avatar5);
         SharedPreferences sharedPreferences = getSharedPreferences("HabitGamePrefs", MODE_PRIVATE);
         String email = sharedPreferences.getString("email", null);
         String username = sharedPreferences.getString("username", "");
         int avatar = sharedPreferences.getInt("avatar", R.drawable.avatar1);
+        //int avatar = R.drawable.avatar1;
 
 
         // Postavljanje nav header elementa
@@ -231,6 +237,25 @@ public class MainActivity extends AppCompatActivity {
                 drawer.closeDrawers();
                 return true;
             }
+            else if (id == R.id.categoryListFragment) {
+                navController.navigate(R.id.categoryListFragment);
+                actionBar.setTitle("Kategorije");
+                drawer.closeDrawers();
+                return true;
+            }
+            else if (id == R.id.tasksPagerFragment) {
+                navController.navigate(R.id.tasksPagerFragment);
+                actionBar.setTitle(R.string.tasks);
+                drawer.closeDrawers();
+                return true;
+            }
+            else if (id == R.id.tasksCalendarFragment) {
+                navController.navigate(R.id.tasksCalendarFragment);
+                actionBar.setTitle(R.string.calendar);
+                drawer.closeDrawers();
+                return true;
+            }
+
 
             boolean handled = NavigationUI.onNavDestinationSelected(item, navController);
             if (handled) {

@@ -14,10 +14,22 @@
             android:icon="@drawable/ic_key"
             android:orderInCategory="100" />
         <item
+            android:id="@+id/tasksCalendarFragment"
+            android:icon="@android:drawable/ic_menu_month"
+            android:title="@string/calendar" />
+        <item
             android:id="@+id/taskCreationFragment"
             android:title="Kreiraj Zadatak"
             android:icon="@drawable/ic_add_task"
             android:orderInCategory="100" />
+        <item
+            android:id="@+id/tasksPagerFragment"
+            android:icon="@drawable/ic_hamburger"
+            android:title="@string/tasks" />
+        <item
+            android:id="@+id/categoryListFragment"
+            android:title="Kategorije"
+            android:icon="@drawable/ic_category_list"/>
         <item
             android:id="@+id/categoryCreationFragment"
             android:title="Kreiraj kategoriju"

@@ -60,4 +60,23 @@ public class TaskService {
         return taskCompletionSource.getTask();
     }
 
+    public com.google.android.gms.tasks.Task<Void> markDone(Task t){
+        t.setStatus(TaskStatus.URADJEN);
+        t.setIsCompleted(true);
+        return TaskRepository.updateStatus(t.getId(), TaskStatus.URADJEN.name(), true);
+    }
+    public com.google.android.gms.tasks.Task<Void> markCanceled(Task t){
+        t.setStatus(TaskStatus.OTKAZAN);
+        t.setIsCompleted(false);
+        return TaskRepository.updateStatus(t.getId(), TaskStatus.OTKAZAN.name(), false);
+    }
+    public com.google.android.gms.tasks.Task<Void> markPaused(Task t){
+        t.setStatus(TaskStatus.PAUZIRAN);
+        return TaskRepository.updateStatus(t.getId(), TaskStatus.PAUZIRAN.name(), false);
+    }
+    public com.google.android.gms.tasks.Task<Void> markActive(Task t){
+        t.setStatus(TaskStatus.AKTIVAN);
+        return TaskRepository.updateStatus(t.getId(), TaskStatus.AKTIVAN.name(), false);
+    }
+
 }

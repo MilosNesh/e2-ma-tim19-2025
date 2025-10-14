@@ -136,4 +136,34 @@ public class CategoryRepository {
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "Category deleted: " + categoryId))
                 .addOnFailureListener(e -> Log.e(TAG, "Error deleting category: " + categoryId, e));
     }
+
+    public static com.google.firebase.firestore.ListenerRegistration listenForCurrentUser(
+            @NonNull java.util.function.Consumer<List<Category>> onData,
+            @NonNull java.util.function.Consumer<Throwable> onError) {
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String uid = FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+
+        if (uid == null) {
+            onData.accept(new ArrayList<>());
+            return () -> {}; // no-op
+        }
+
+        return db.collection("categories")
+                .whereEqualTo("userId", uid)
+                .addSnapshotListener((snap, e) -> {
+                    if (e != null) { onError.accept(e); return; }
+                    List<Category> list = new ArrayList<>();
+                    if (snap != null) {
+                        for (QueryDocumentSnapshot doc : snap) {
+                            Category c = doc.toObject(Category.class);
+                            c.setId(doc.getId());
+                            list.add(c);
+                        }
+                    }
+                    onData.accept(list);
+                });
+    }
+
 }

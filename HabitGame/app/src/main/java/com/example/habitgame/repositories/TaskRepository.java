@@ -15,7 +15,9 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TaskRepository {
 
@@ -93,6 +95,16 @@ public class TaskRepository {
                     // Baca se izuzetak koji se može uhvatiti u TaskCompletionService
                     throw new RuntimeException("DB update failed.", e);
                 });
+    }
+
+    public static com.google.android.gms.tasks.Task<Void> updateStatus(@NonNull String taskId,
+                                                                       @NonNull String status,
+                                                                       boolean isCompleted) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("status", status);
+        updates.put("isCompleted", isCompleted);
+        return db.collection("tasks").document(taskId).update(updates);
     }
 
     public static com.google.android.gms.tasks.Task<Void> updateCompletionStatus(String taskId, boolean isCompleted) {

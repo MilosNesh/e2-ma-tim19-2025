@@ -10,11 +10,19 @@
         android:layout_height="wrap_content"
         android:hint="Naziv kategorije" />
 
-    <EditText
-        android:id="@+id/et_category_color"
+    <View
+        android:id="@+id/view_color_preview"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
+        android:background="#2196F3" />
+
+    <Button
+        android:id="@+id/btn_pick_color"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="#RRGGBB (npr. #FF5733)" />
+        android:text="Izaberi boju"
+        android:layout_marginTop="8dp" />
 
     <Button
         android:id="@+id/btn_save_category"

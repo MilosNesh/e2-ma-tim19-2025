@@ -300,7 +300,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="file:/$PROJECT_DIR$/../../../../../../../Users/nikol/AppData/Local/Android/Sdk/icons/material/materialicons/playlist_add/baseline_playlist_add_24.xml" />
+                                      <entry key="url" value="file:/$PROJECT_DIR$/../../../../../../../Users/nikol/AppData/Local/Android/Sdk/icons/material/materialsymbolsoutlined/assignment_turned_in/outline_assignment_turned_in_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -310,7 +310,7 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="outputName" value="ic_add_category" />
+                            <entry key="outputName" value="ic_edit" />
                             <entry key="sourceFile" value="C:\Users\PC\Downloads\moving_24dp_1F1F1F_FILL0_wght400_GRAD0_opsz24.svg" />
                           </map>
                         </option>
