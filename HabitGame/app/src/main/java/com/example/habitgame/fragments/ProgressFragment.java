@@ -138,7 +138,7 @@ public class ProgressFragment extends Fragment {
                         for(Task t : taskList) {
                             ukupno++;
                             switch (t.getStatus()){
-                                case KREIRAN: kreirani++; break;
+                                case AKTIVAN: kreirani++; break;
                                 case URADJEN: uradjeni++; break;
                                 case PAUZIRAN: neuradjeni++; break;
                                 case OTKAZAN: otkazani++; break;

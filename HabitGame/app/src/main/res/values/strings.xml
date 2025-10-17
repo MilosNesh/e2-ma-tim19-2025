@@ -109,5 +109,28 @@
     <string name="importance_s">Važnost: %1$s</string>
     <string name="xp_s">XP: %1$d</string>
     <string name="calendar">Kalendar</string>
+    <string name="status_s">Status: %1$s</string>
+    <string name="task_date_xp">%1$s • %2$d XP</string>
+    <string name="task_name">Naziv zadatka</string>
+    <string name="task_description">Opis zadatka</string>
+    <string name="date">Datum</string>
+    <string name="time">Vreme</string>
+    <string name="pick">Izaberi</string>
+    <string name="cancel">Otkaži</string>
+    <string name="pick_date">Izaberi datum</string>
+    <string name="pick_time">Izaberi vreme</string>
+    <string name="err_name_required">Naziv je obavezan.</string>
+    <string name="err_cannot_edit_finished">Zadatak je završen/otkazan i ne može se menjati.</string>
+    <string name="err_cannot_edit_past">Ne možeš menjati zadatak čije je izvođenje u prošlosti.</string>
+    <string name="task_updated">Zadatak izmenjen.</string>
+    <string name="weight">Težina</string>
+    <string name="importance">Bitnost</string>
+    <string name="err_cannot_delete_finished">Nije moguće obrisati završen zadatak.</string>
+    <string name="show_details">Detalji</string>
+    <string name="status_active">Aktivan</string>
+    <string name="status_paused">Pauziran</string>
+    <string name="status_canceled">Otkazan</string>
+    <string name="status_done">Urađen</string>
+    <string name="status_created">Kreiran</string>
 
 </resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Ovaj TextView se samo pronalazi u fragmentu i puni; layout je potreban da zadovolji cv_monthHeaderResource -->
+    <TextView
+        android:id="@+id/tv_header_dummy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
+</FrameLayout>

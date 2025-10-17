@@ -1,50 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent" android:layout_height="wrap_content"
-    android:layout_marginHorizontal="12dp" android:layout_marginVertical="6dp"
-    app:cardCornerRadius="14dp" app:cardElevation="3dp">
+    android:id="@+id/card_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="6dp"
+    app:cardUseCompatPadding="true"
+    app:cardCornerRadius="16dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="@android:color/darker_gray">
 
-    <LinearLayout android:orientation="vertical"
-        android:padding="14dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
 
-        <TextView
-            android:id="@+id/tv_name"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:textStyle="bold" android:textSize="16sp" android:textColor="@android:color/black"/>
+        <!-- Gornji red: naslov + status badge -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                android:textSize="12sp"
+                android:background="@android:color/transparent" />
+        </LinearLayout>
+
+        <!-- Opis -->
         <TextView
             android:id="@+id/tv_desc"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:textSize="13sp" android:textColor="@android:color/darker_gray"
-            android:layout_marginTop="4dp"/>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@android:color/darker_gray"
+            android:maxLines="2"
+            android:ellipsize="end" />
 
+        <!-- Donji red: datum/instanca + XP + dugmad akcija -->
         <LinearLayout
-            android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:gravity="end" android:layout_marginTop="8dp">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_when"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="12sp"
+                android:textColor="@android:color/secondary_text_light" />
+
+            <TextView
+                android:id="@+id/tv_xp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:layout_marginEnd="8dp" />
 
             <ImageButton
-                android:id="@+id/btn_done" android:layout_width="40dp" android:layout_height="40dp"
+                android:id="@+id/btn_done"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:contentDescription="@string/mark_done"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="8dp"
-                app:srcCompat="@android:drawable/checkbox_on_background"/>
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/checkbox_on_background" />
 
             <ImageButton
-                android:id="@+id/btn_cancel" android:layout_width="40dp" android:layout_height="40dp"
+                android:id="@+id/btn_cancel"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:contentDescription="@string/mark_canceled"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="8dp"
-                app:srcCompat="@android:drawable/ic_menu_close_clear_cancel"/>
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_close_clear_cancel" />
 
             <ImageButton
-                android:id="@+id/btn_pause" android:layout_width="40dp" android:layout_height="40dp"
+                android:id="@+id/btn_pause"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:contentDescription="@string/mark_paused"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="8dp"
-                app:srcCompat="@android:drawable/ic_media_pause"/>
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_media_pause" />
 
             <ImageButton
-                android:id="@+id/btn_active" android:layout_width="40dp" android:layout_height="40dp"
+                android:id="@+id/btn_active"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:contentDescription="@string/mark_active"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="8dp"
-                app:srcCompat="@android:drawable/ic_media_play"/>
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_media_play" />
+
+            <ImageButton
+                android:id="@+id/btn_more"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:contentDescription="@string/show_details"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_info_details" />
         </LinearLayout>
+
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

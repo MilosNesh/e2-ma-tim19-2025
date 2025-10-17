@@ -13,6 +13,15 @@
         android:id="@+id/taskCreationFragment"
         android:name="com.example.habitgame.fragments.TaskCreationFragment"
         android:label="Kreiraj Zadatak" />
+    <fragment
+        android:id="@+id/tasksMonthFragment"
+        android:name="com.example.habitgame.fragments.TasksMonthFragment"
+        android:label="@string/calendar"
+        tools:layout="@layout/fragment_tasks_month" />
+    <fragment
+        android:id="@+id/editTaskFragment"
+        android:name="com.example.habitgame.fragments.EditTaskFragment"
+        android:label="@string/edit" />
 
     <fragment
         android:id="@+id/categoryListFragment"

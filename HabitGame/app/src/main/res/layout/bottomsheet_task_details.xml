@@ -1,34 +1,107 @@
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp">
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
 
-    <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-        <TextView android:id="@+id/tv_title" android:textStyle="bold" android:textSize="18sp"
-            android:layout_width="match_parent" android:layout_height="wrap_content"/>
-        <TextView android:id="@+id/tv_desc" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="6dp" android:textColor="@android:color/darker_gray"/>
+        <!-- Naslov + Edit dugme u istom redu -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
 
-        <TextView android:id="@+id/tv_meta" android:layout_width="match_parent" android:layout_height="wrap_content"
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textStyle="bold"
+                android:textSize="18sp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_edit"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/edit"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@android:color/darker_gray"/>
+
+        <TextView
+            android:id="@+id/tv_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"/>
 
-        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:gravity="end" android:layout_marginTop="16dp">
+        <!-- Red 1: Uradjen / Otkazan -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_done" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:id="@+id/btn_done"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@string/mark_done"/>
+
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_cancel" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="@string/mark_canceled" android:layout_marginStart="8dp"/>
+                android:id="@+id/btn_cancel"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mark_canceled"
+                android:layout_marginStart="8dp"/>
         </LinearLayout>
 
-        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:gravity="end" android:layout_marginTop="8dp">
+        <!-- Red 2: Pauziraj / Aktiviraj -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_pause" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:id="@+id/btn_pause"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@string/mark_paused"/>
+
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_active" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="@string/mark_active" android:layout_marginStart="8dp"/>
+                android:id="@+id/btn_active"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mark_active"
+                android:layout_marginStart="8dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/delete" />
+
         </LinearLayout>
+
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

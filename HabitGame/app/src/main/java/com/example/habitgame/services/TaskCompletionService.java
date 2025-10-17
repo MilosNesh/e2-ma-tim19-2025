@@ -48,7 +48,7 @@ public class TaskCompletionService {
 
     private boolean isQuotaExceeded(Task task) {
 
-        long todayStartTimestamp = DateUtils.getStartOfDayTimestamp();
+        long todayStartTimestamp = DateUtils.startOfToday();
         if (task.getLastCompletionTimestamp() == null || task.getLastCompletionTimestamp() < todayStartTimestamp) {
             task.setCompletionsTodayCount(0);
         }

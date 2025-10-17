@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <!-- Ime -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="@string/task_name_hint">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_task_name"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Opis -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="@string/task_description_hint" android:layout_marginTop="12dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_task_desc"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Datum (bez vremena) -->
+        <LinearLayout
+            android:id="@+id/group_date_row"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center_vertical"
+            android:layout_marginTop="16dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:hint="@string/pick_date">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_task_date"
+                    android:enabled="false"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_pick_date"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="@string/pick_date"/>
+        </LinearLayout>
+
+        <!-- Težina -->
+        <LinearLayout
+            android:id="@+id/group_weight_row"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:layout_marginTop="16dp">
+
+            <TextView
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/weight" android:textStyle="bold"/>
+
+            <Spinner
+                android:id="@+id/sp_weight"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"/>
+        </LinearLayout>
+
+        <!-- Bitnost -->
+        <LinearLayout
+            android:id="@+id/group_importance_row"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:layout_marginTop="16dp">
+
+            <TextView
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/importance" android:textStyle="bold"/>
+
+            <Spinner
+                android:id="@+id/sp_importance"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"/>
+        </LinearLayout>
+
+        <!-- Dugmad -->
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="end"
+            android:layout_marginTop="24dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_cancel"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/cancel"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="@string/save"/>
+        </LinearLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

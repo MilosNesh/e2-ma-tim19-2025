@@ -249,8 +249,8 @@ public class MainActivity extends AppCompatActivity {
                 drawer.closeDrawers();
                 return true;
             }
-            else if (id == R.id.tasksCalendarFragment) {
-                navController.navigate(R.id.tasksCalendarFragment);
+            else if (id == R.id.tasksMonthFragment) {
+                navController.navigate(R.id.tasksMonthFragment);
                 actionBar.setTitle(R.string.calendar);
                 drawer.closeDrawers();
                 return true;
