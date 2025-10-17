@@ -3,20 +3,21 @@ package com.example.habitgame.repositories;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.example.habitgame.model.Account;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,160 +25,161 @@ import java.util.List;
 import java.util.Map;
 
 public class AccountRepository {
-    public static void initDB(){
 
-    }
-
+    // ------------------------------------------------------------
+    // CREATE
+    // ------------------------------------------------------------
     public static void insert(Account account){
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        // Kreiraj korisnika putem Firebase Authentication
         mAuth.createUserWithEmailAndPassword(account.getEmail(), account.getPassword())
                 .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = mAuth.getCurrentUser(); // Sada je korisnik autentifikovan
-
-                        if (user != null && !user.isEmailVerified()) {
-                            // Pošaljite verifikacioni email
-                            user.sendEmailVerification()
-                                    .addOnSuccessListener(aVoid -> {
-                                        Log.d("EMAIL", "Verifikacioni email poslat.");
-
-                                        account.setIsVerified(false);
-                                        account.setRegistrationTimestamp(System.currentTimeMillis());
-
-                                        db.collection("accounts")
-                                                .add(account)
-                                                .addOnSuccessListener(documentReference -> {
-                                                    FirebaseAuth.getInstance().signOut();
-                                                    Log.d("REZ_DB", "DocumentSnapshot added with ID: " + documentReference.getId());
-                                                })
-                                                .addOnFailureListener(e -> Log.w("REZ_DB", "Error adding document", e));
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Log.e("EMAIL", "Greška prilikom slanja emaila.", e);
-                                    });
-                        }
-                    } else {
-                        // Greška prilikom kreiranja korisnika
+                    if (!task.isSuccessful()) {
                         Log.e("AUTH", "Greška prilikom kreiranja korisnika", task.getException());
+                        return;
                     }
+                    FirebaseUser user = mAuth.getCurrentUser();
+                    if (user == null) {
+                        Log.e("AUTH", "User null posle createUserWithEmailAndPassword");
+                        return;
+                    }
+
+                    user.sendEmailVerification()
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d("EMAIL", "Verifikacioni email poslat.");
+
+                                account.setIsVerified(false);
+                                account.setRegistrationTimestamp(System.currentTimeMillis());
+                                // obavezno veži uid i piši na docId = uid (nema više auto-ID duplikata)
+                                String uid = user.getUid();
+                                Map<String, Object> data = new HashMap<>();
+                                data.put("username", account.getUsername());
+                                data.put("email", account.getEmail());
+                                data.put("avatar", account.getAvatar());
+                                data.put("password", account.getPassword());
+                                data.put("level", account.getLevel());
+                                data.put("title", account.getTitle());
+                                data.put("powerPoints", account.getPowerPoints());
+                                data.put("experiencePoints", account.getExperiencePoints());
+                                data.put("coins", account.getCoins());
+                                data.put("badgeNumbers", account.getBadgeNumbers());
+                                data.put("equipments", account.getEquipments());
+                                data.put("isVerified", account.getIsVerified());
+                                data.put("registrationTimestamp", account.getRegistrationTimestamp());
+                                data.put("friends", account.getFriends());
+                                data.put("fcmToken", account.getFcmToken());
+                                data.put("allianceId", account.getAllianceId());
+                                data.put("uid", uid);
+
+                                db.collection("accounts").document(uid)
+                                        .set(data, SetOptions.merge())
+                                        .addOnSuccessListener(ref -> {
+                                            FirebaseAuth.getInstance().signOut();
+                                            Log.d("REZ_DB", "Account upisan na docId=uid: " + uid);
+                                        })
+                                        .addOnFailureListener(e -> Log.w("REZ_DB", "Error writing account", e));
+                            })
+                            .addOnFailureListener(e -> Log.e("EMAIL", "Greška prilikom slanja emaila.", e));
                 });
     }
 
+    // ------------------------------------------------------------
+    // READ helpers
+    // ------------------------------------------------------------
     public static Task<List<Account>> select(){
-        TaskCompletionSource<List<Account>> taskCompletionSource = new TaskCompletionSource<>();
+        TaskCompletionSource<List<Account>> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("accounts")
                 .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            List<Account> accountList = new ArrayList<>();
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Account account = document.toObject(Account.class);
-                                accountList.add(account);
-                                Log.d("REZ_DB", document.getId() + " => " + document.getData());
-                            }
-                            taskCompletionSource.setResult(accountList);
-                        } else {
-                            Log.w("REZ_DB", "Error getting documents.", task.getException());
-                            taskCompletionSource.setResult(null);
-                        }
+                .addOnSuccessListener(snap -> {
+                    List<Account> out = new ArrayList<>();
+                    for (QueryDocumentSnapshot d : snap) {
+                        Account a = d.toObject(Account.class);
+                        out.add(a);
+                        Log.d("REZ_DB", d.getId() + " => " + d.getData());
                     }
+                    tcs.setResult(out);
+                })
+                .addOnFailureListener(e -> {
+                    Log.w("REZ_DB", "Error getting documents.", e);
+                    tcs.setResult(null);
                 });
-        return taskCompletionSource.getTask();
+        return tcs.getTask();
     }
 
     public Task<Account> selectByUsername(String username){
-        TaskCompletionSource<Account> taskCompletionSource = new TaskCompletionSource<>();
+        TaskCompletionSource<Account> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         db.collection("accounts")
-            .whereEqualTo("username", username)
-            .limit(1)
-            .get()
-            .addOnSuccessListener(queryDocumentSnapshots -> {
-                if (!queryDocumentSnapshots.isEmpty()) {
-                    DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
-                    Account account = document.toObject(Account.class);
-                    taskCompletionSource.setResult(account);
-                } else {
-                    Log.d("NoUserFound", "Nema korisnika sa tim korisničkim imenom.");
-                    taskCompletionSource.setException(new Exception("Nema korisnika sa tim korisničkim imenom."));
-                }
-            })
-            .addOnFailureListener(e -> {
-                Log.e("FirebaseError", "Greška prilikom pretrage korisnika: ", e);
-                taskCompletionSource.setException(e);
-            });
-        return taskCompletionSource.getTask();
+                .whereEqualTo("username", username)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(q -> {
+                    if (!q.isEmpty()) {
+                        Account a = q.getDocuments().get(0).toObject(Account.class);
+                        tcs.setResult(a);
+                    } else {
+                        tcs.setException(new Exception("Nema korisnika sa tim korisničkim imenom."));
+                    }
+                })
+                .addOnFailureListener(tcs::setException);
+        return tcs.getTask();
     }
 
     public static Task<Account> getAccountById(String userId) {
-        TaskCompletionSource<Account> taskCompletionSource = new TaskCompletionSource<>();
+        TaskCompletionSource<Account> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         db.collection("accounts").document(userId)
                 .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        Account account = documentSnapshot.toObject(Account.class);
-                        taskCompletionSource.setResult(account);
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists()) {
+                        tcs.setResult(doc.toObject(Account.class));
                     } else {
-                        Log.d("NoUserFound", "Nalog sa ID-om nije pronađen.");
-                        taskCompletionSource.setResult(null);
+                        tcs.setResult(null);
                     }
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("FirebaseError", "Greška prilikom dohvata korisnika po ID-u: ", e);
-                    taskCompletionSource.setException(e);
-                });
+                .addOnFailureListener(tcs::setException);
 
-        return taskCompletionSource.getTask();
+        return tcs.getTask();
     }
 
     public Task<Account> selectByEmail(String email){
-        TaskCompletionSource<Account> taskCompletionSource = new TaskCompletionSource<>();
+        TaskCompletionSource<Account> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         db.collection("accounts")
                 .whereEqualTo("email", email)
                 .limit(1)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
-                        Account account = document.toObject(Account.class);
-                        taskCompletionSource.setResult(account);
+                .addOnSuccessListener(q -> {
+                    if (!q.isEmpty()) {
+                        tcs.setResult(q.getDocuments().get(0).toObject(Account.class));
                     } else {
-                        Log.d("NoUserFound", "Nema korisnika sa tim emailom");
-                        taskCompletionSource.trySetResult(null);
+                        tcs.trySetResult(null);
                     }
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("FirebaseError", "Greška prilikom pretrage korisnika: ", e);
-                    taskCompletionSource.setException(e);
-                });
-        return taskCompletionSource.getTask();
+                .addOnFailureListener(tcs::setException);
+        return tcs.getTask();
     }
 
+    // ------------------------------------------------------------
+    // UPDATE / DELETE bulk
+    // ------------------------------------------------------------
     public static void deleteAll(){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-
         db.collection("accounts")
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    for (DocumentSnapshot document : queryDocumentSnapshots) {
-                        document.getReference().delete()
-                                .addOnSuccessListener(aVoid -> Log.d("REZ_DB", "Account " + document.getId() + " has been deleted."))
-                                .addOnFailureListener(e -> Log.w("REZ_DB", "Error deleting account.", e));
+                .addOnSuccessListener(q -> {
+                    for (DocumentSnapshot d : q) {
+                        d.getReference().delete()
+                                .addOnSuccessListener(aVoid -> Log.d("REZ_DB","Account "+d.getId()+" deleted."))
+                                .addOnFailureListener(e -> Log.w("REZ_DB","Error deleting account.", e));
                     }
                 })
                 .addOnFailureListener(e -> Log.w("REZ_DB", "Error fetching accounts.", e));
-
     }
 
     public static void update(Account account){
@@ -185,32 +187,28 @@ public class AccountRepository {
 
         db.collection("accounts")
                 .whereEqualTo("email", account.getEmail())
+                .limit(1)
                 .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        DocumentReference docRef = doc.getReference();
-
-                        Map<String, Object> updates = new HashMap<>();
-                        updates.put("password", account.getPassword());
-                        updates.put("equipments", account.getEquipments());
-                        updates.put("coins", account.getCoins());
-                        updates.put("friends", account.getFriends());
-                        updates.put("title", account.getTitle());
-                        updates.put("level", account.getLevel());
-                        updates.put("experiencePoints", account.getExperiencePoints());
-                        updates.put("powerPoints", account.getPowerPoints());
-                        updates.put("badgeNumbers", account.getBadgeNumbers());
-                        docRef.update(updates)
-                                .addOnSuccessListener(aVoid ->
-                                        Log.d("REZ_DB", "Successfully updated user: " + account.getEmail()))
-                                .addOnFailureListener(e ->
-                                        Log.w("REZ_DB", "Error updating user: " + account.getEmail(), e));
+                .addOnSuccessListener(q -> {
+                    for (QueryDocumentSnapshot doc : q) {
+                        DocumentReference ref = doc.getReference();
+                        Map<String, Object> up = new HashMap<>();
+                        up.put("password", account.getPassword());
+                        up.put("equipments", account.getEquipments());
+                        up.put("coins", account.getCoins());
+                        up.put("friends", account.getFriends());
+                        up.put("title", account.getTitle());
+                        up.put("level", account.getLevel());
+                        up.put("experiencePoints", account.getExperiencePoints());
+                        up.put("powerPoints", account.getPowerPoints());
+                        up.put("badgeNumbers", account.getBadgeNumbers());
+                        up.put("uid", getUid()); // veži uid ako fali
+                        ref.update(up)
+                                .addOnSuccessListener(a -> Log.d("REZ_DB","Updated user: "+account.getEmail()))
+                                .addOnFailureListener(e -> Log.w("REZ_DB","Update error: "+account.getEmail(), e));
                     }
                 })
-                .addOnFailureListener(e -> {
-                    Log.w("REZ_DB", "Error querying username: " + account.getEmail(), e);
-                });
-
+                .addOnFailureListener(e -> Log.w("REZ_DB","Error querying email: "+account.getEmail(), e));
     }
 
     public static void updateIsVerified(String email, boolean verified) {
@@ -219,11 +217,9 @@ public class AccountRepository {
                 .whereEqualTo("email", email)
                 .limit(1)
                 .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        doc.getReference().update("isVerified", verified)
-                                .addOnSuccessListener(aVoid -> Log.d("REZ_DB", "isVerified updated"))
-                                .addOnFailureListener(e -> Log.e("REZ_DB", "Failed to update isVerified", e));
+                .addOnSuccessListener(q -> {
+                    for (QueryDocumentSnapshot doc : q) {
+                        doc.getReference().update("isVerified", verified);
                     }
                 });
     }
@@ -233,94 +229,73 @@ public class AccountRepository {
         db.collection("accounts")
                 .whereEqualTo("email", email)
                 .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        doc.getReference().delete()
-                                .addOnSuccessListener(aVoid -> Log.d("REZ_DB", "Account deleted due to expired link."))
-                                .addOnFailureListener(e -> Log.e("REZ_DB", "Failed to delete expired account.", e));
+                .addOnSuccessListener(q -> {
+                    for (QueryDocumentSnapshot doc : q) {
+                        doc.getReference().delete();
                     }
                 });
     }
 
     public Task<List<Account>> selectByUsernameContains(String usernameSubstring) {
-        TaskCompletionSource<List<Account>> taskCompletionSource = new TaskCompletionSource<>();
+        TaskCompletionSource<List<Account>> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         db.collection("accounts")
                 .orderBy("username")
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        List<Account> accounts = new ArrayList<>();
-                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                            Account account = document.toObject(Account.class);
-                            if(account.getUsername().toLowerCase().contains(usernameSubstring.toLowerCase()))
-                                 accounts.add(account);
+                .addOnSuccessListener(q -> {
+                    if (q.isEmpty()) { tcs.setResult(null); return; }
+                    List<Account> out = new ArrayList<>();
+                    for (DocumentSnapshot d : q.getDocuments()) {
+                        Account a = d.toObject(Account.class);
+                        if (a != null && a.getUsername()!=null &&
+                                a.getUsername().toLowerCase().contains(usernameSubstring.toLowerCase())) {
+                            out.add(a);
                         }
-                        taskCompletionSource.setResult(accounts);
-                    } else {
-                        Log.d("NoUsersFound", "Nema korisnika koji sadrže zadati deo korisničkog imena.");
-                        taskCompletionSource.setResult(null);
                     }
+                    tcs.setResult(out);
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("FirebaseError", "Greška prilikom pretrage korisnika: ", e);
-                    taskCompletionSource.setException(e);
-                });
+                .addOnFailureListener(tcs::setException);
 
-        return taskCompletionSource.getTask();
+        return tcs.getTask();
     }
 
     public static Task<List<Account>> selectAllExpectMine(String email){
-        TaskCompletionSource<List<Account>> taskCompletionSource = new TaskCompletionSource<>();
+        TaskCompletionSource<List<Account>> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("accounts")
                 .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            List<Account> accountList = new ArrayList<>();
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Account account = document.toObject(Account.class);
-                                if(!account.getEmail().equals(email) && account.getIsVerified())
-                                    accountList.add(account);
-                                Log.d("REZ_DB", document.getId() + " => " + document.getData());
-                            }
-                            taskCompletionSource.setResult(accountList);
-                        } else {
-                            Log.w("REZ_DB", "Error getting documents.", task.getException());
-                            taskCompletionSource.setResult(null);
-                        }
+                .addOnSuccessListener(q -> {
+                    List<Account> out = new ArrayList<>();
+                    for (QueryDocumentSnapshot d : q) {
+                        Account a = d.toObject(Account.class);
+                        if (a != null && a.getEmail()!=null && !a.getEmail().equals(email) && a.getIsVerified())
+                            out.add(a);
                     }
-                });
-        return taskCompletionSource.getTask();
+                    tcs.setResult(out);
+                })
+                .addOnFailureListener(e -> { Log.w("REZ_DB","Error getting documents.", e); tcs.setResult(null); });
+        return tcs.getTask();
     }
 
     public static Task<List<Account>> selectAllFriends(String email) {
-        TaskCompletionSource<List<Account>> taskCompletionSource = new TaskCompletionSource<>();
+        TaskCompletionSource<List<Account>> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("accounts")
                 .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            List<Account> accountList = new ArrayList<>();
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Account account = document.toObject(Account.class);
-                                if(!account.getEmail().equals(email) && account.getIsVerified() && account.getFriends().contains(email))
-                                    accountList.add(account);
-                                Log.d("REZ_DB", document.getId() + " => " + document.getData());
-                            }
-                            taskCompletionSource.setResult(accountList);
-                        } else {
-                            Log.w("REZ_DB", "Error getting documents.", task.getException());
-                            taskCompletionSource.setResult(null);
+                .addOnSuccessListener(q -> {
+                    List<Account> out = new ArrayList<>();
+                    for (QueryDocumentSnapshot d : q) {
+                        Account a = d.toObject(Account.class);
+                        if (a!=null && a.getEmail()!=null && !a.getEmail().equals(email)
+                                && a.getIsVerified() && a.getFriends()!=null && a.getFriends().contains(email)) {
+                            out.add(a);
                         }
                     }
-                });
-        return taskCompletionSource.getTask();
+                    tcs.setResult(out);
+                })
+                .addOnFailureListener(e -> { Log.w("REZ_DB","Error getting documents.", e); tcs.setResult(null); });
+        return tcs.getTask();
     }
 
     public static void updateFcmToken(String email, String token) {
@@ -329,119 +304,124 @@ public class AccountRepository {
                 .whereEqualTo("email", email)
                 .limit(1)
                 .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        doc.getReference().update("fcmToken", token)
-                                .addOnSuccessListener(aVoid -> Log.d("REZ_DB", "isVerified updated"))
-                                .addOnFailureListener(e -> Log.e("REZ_DB", "Failed to update isVerified", e));
+                .addOnSuccessListener(q -> {
+                    for (QueryDocumentSnapshot doc : q) {
+                        doc.getReference().update("fcmToken", token, "uid", getUid());
                     }
                 });
     }
 
     public static Task<Account> updateAlliance(String email, String allianceId) {
-        TaskCompletionSource<Account> taskCompletionSource = new TaskCompletionSource<>();
+        TaskCompletionSource<Account> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         db.collection("accounts")
                 .whereEqualTo("email", email)
                 .limit(1)
                 .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    if (!querySnapshot.isEmpty()) {
-                        DocumentSnapshot document = querySnapshot.getDocuments().get(0);
-                        String accountId = document.getId();
-
-                        // Ažuriraj allianceId
-                        document.getReference().update("allianceId", allianceId)
-                                .addOnSuccessListener(aVoid -> {
-                                    Log.d("REZ_DB", "AllianceId updated");
-
-                                    // Ponovo učitaj dokument i konvertuj u Account objekat
-                                    db.collection("accounts")
-                                            .document(accountId)
-                                            .get()
-                                            .addOnSuccessListener(updatedDoc -> {
-                                                if (updatedDoc.exists()) {
-                                                    Account updatedAccount = updatedDoc.toObject(Account.class);
-                                                    taskCompletionSource.setResult(updatedAccount);
-                                                } else {
-                                                    taskCompletionSource.setResult(null);
-                                                }
-                                            })
-                                            .addOnFailureListener(e -> {
-                                                taskCompletionSource.setResult(null);
-                                            });
-                                })
-                                .addOnFailureListener(e -> {
-                                    Log.e("REZ_DB", "Failed to update allianceId", e);
-                                    taskCompletionSource.setResult(null);
-                                });
-
-                    } else {
-                        Log.w("REZ_DB", "Nalog sa email-om nije pronađen");
-                        taskCompletionSource.setResult(null);
-                    }
+                .addOnSuccessListener(q -> {
+                    if (q.isEmpty()) { tcs.setResult(null); return; }
+                    DocumentSnapshot document = q.getDocuments().get(0);
+                    String docId = document.getId();
+                    document.getReference().update("allianceId", allianceId, "uid", getUid())
+                            .addOnSuccessListener(aVoid ->
+                                    db.collection("accounts").document(docId).get()
+                                            .addOnSuccessListener(updated -> tcs.setResult(updated.toObject(Account.class)))
+                                            .addOnFailureListener(e -> tcs.setResult(null)))
+                            .addOnFailureListener(e -> { Log.e("REZ_DB","Failed to update allianceId", e); tcs.setResult(null); });
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("REZ_DB", "Greška pri pretrazi naloga po emailu", e);
-                    taskCompletionSource.setResult(null);
-                });
+                .addOnFailureListener(e -> { Log.e("REZ_DB","Greška pri pretrazi naloga po emailu", e); tcs.setResult(null); });
 
-        return taskCompletionSource.getTask();
+        return tcs.getTask();
     }
 
     public static Task<Void> updateXp(String userId, int xpEarned) {
+        if (xpEarned <= 0) return Tasks.forResult(null);
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        // prvo probaj docId = uid
+        DocumentReference byUid = db.collection("accounts").document(userId);
+        return byUid.get().continueWithTask(t -> {
+            if (t.isSuccessful() && t.getResult()!=null && t.getResult().exists()
+                    && t.getResult().getData()!=null && t.getResult().getData().size()>5) {
+                // izgleda kao puni dokument
+                return byUid.update("experiencePoints", FieldValue.increment(xpEarned));
+            } else {
+                // nađi glavni dok po email-u
+                String email = getEmail();
+                if (email == null) return Tasks.forException(new IllegalStateException("Nema email-a trenutnog korisnika"));
+                return db.collection("accounts").whereEqualTo("email", email).limit(1).get()
+                        .continueWithTask(q -> {
+                            if (!q.isSuccessful() || q.getResult()==null || q.getResult().isEmpty())
+                                return Tasks.forException(new IllegalStateException("Nalog nije pronađen."));
+                            DocumentReference main = q.getResult().getDocuments().get(0).getReference();
+                            Map<String, Object> up = new HashMap<>();
+                            up.put("experiencePoints", FieldValue.increment(xpEarned));
+                            up.put("uid", userId);
+                            return main.update(up);
+                        });
+            }
+        });
+    }
+
+    // Glavna promena: uvećaj XP na *velikom* dokumentu (po email-u)
+    public static Task<Void> incrementXpForCurrentUser(int deltaXp) {
+        if (deltaXp <= 0) return Tasks.forResult(null);
+
+        String email = getEmail();
+        String uid = getUid();
+        if (email == null) return Tasks.forException(new IllegalStateException("Korisnik nije ulogovan."));
+
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        return getAccountById(userId)
-                .continueWithTask(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        Account account = task.getResult();
+        return db.collection("accounts").whereEqualTo("email", email).limit(1).get()
+                .continueWithTask(q -> {
+                    if (!q.isSuccessful() || q.getResult()==null || q.getResult().isEmpty())
+                        return Tasks.forException(new IllegalStateException("Nalog nije pronađen po email-u."));
 
-                        account.addExperiencePoints(xpEarned);
-
-                        // 3. Ažuriraj ceo dokument direktno po ID-u
-                        return db.collection("accounts").document(userId).set(account)
-                                .addOnSuccessListener(aVoid -> Log.d("REZ_DB", "XP successfully updated for user: " + userId))
-                                .addOnFailureListener(e -> {
-                                    Log.w("REZ_DB", "Error updating XP for user: " + userId, e);
-                                    throw new RuntimeException(e); // Propagiraj grešku dalje
-                                });
-                    } else {
-                        // Ako dohvat nije uspeo ili je nalog null
-                        Exception e = task.getException() != null ? task.getException() : new Exception("Nalog nije pronađen.");
-                        Log.e("REZ_DB", "Greška pri dohvatanju naloga za XP update.", e);
-                        return com.google.android.gms.tasks.Tasks.forException(e);
-                    }
-                });
+                    DocumentReference main = q.getResult().getDocuments().get(0).getReference();
+                    Map<String,Object> up = new HashMap<>();
+                    up.put("experiencePoints", FieldValue.increment(deltaXp));
+                    if (uid != null) up.put("uid", uid); // dodaj uid ako fali
+                    return main.update(up);
+                })
+                .addOnSuccessListener(a -> Log.d("REZ_DB","XP +"+deltaXp+" na GLAVNOM dokumentu."))
+                .addOnFailureListener(e -> Log.e("REZ_DB","XP increment fail", e));
     }
 
     public static Task<List<Account>> getByAlliance(String allianceId) {
-        TaskCompletionSource<List<Account>> taskCompletionSource = new TaskCompletionSource<>();
+        TaskCompletionSource<List<Account>> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         db.collection("accounts")
                 .whereEqualTo("allianceId", allianceId)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        List<Account> accounts = new ArrayList<>();
-                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                            Account account = document.toObject(Account.class);
-                            accounts.add(account);
-                        }
-                        taskCompletionSource.setResult(accounts);
-                    } else {
-                        Log.d("NoAccountsFound", "Nema korisnika sa tim allianceId");
-                        taskCompletionSource.trySetResult(new ArrayList<>());
+                .addOnSuccessListener(q -> {
+                    List<Account> out = new ArrayList<>();
+                    for (DocumentSnapshot d : q.getDocuments()) {
+                        Account a = d.toObject(Account.class);
+                        if (a != null) out.add(a);
                     }
+                    tcs.setResult(out);
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("FirebaseError", "Greška prilikom pretrage korisnika: ", e);
-                    taskCompletionSource.setException(e);
-                });
+                .addOnFailureListener(tcs::setException);
 
-        return taskCompletionSource.getTask();
+        return tcs.getTask();
     }
 
+    // ------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------
+    @Nullable
+    private static String getUid() {
+        return FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid()
+                : null;
+    }
+
+    @Nullable
+    private static String getEmail() {
+        return FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getEmail()
+                : null;
+    }
 }

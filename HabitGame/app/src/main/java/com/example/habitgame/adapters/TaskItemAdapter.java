@@ -31,7 +31,7 @@ public class TaskItemAdapter extends ListAdapter<Task, TaskItemAdapter.VH> {
     }
 
     private final Listener listener;
-    private final SimpleDateFormat dateDf = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
+    private final SimpleDateFormat dateDf = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
 
     public TaskItemAdapter(Listener listener) {
         super(DIFF);
@@ -54,7 +54,10 @@ public class TaskItemAdapter extends ListAdapter<Task, TaskItemAdapter.VH> {
                             && eq(o.getExecutionTime(), n.getExecutionTime())
                             && eq(o.getStartDate(), n.getStartDate())
                             && eq(o.getEndDate(), n.getEndDate())
-                            && o.getIsRepeating() == n.getIsRepeating();
+                            && o.getIsRepeating() == n.getIsRepeating()
+                            && eq(o.getRepeatInterval(), n.getRepeatInterval())
+                            && eq(o.getRepeatUnit(), n.getRepeatUnit())
+                            && eq(o.getCategoryId(), n.getCategoryId());
                 }
                 private boolean eq(Object a, Object b){ return a==null? b==null : a.equals(b); }
             };
@@ -77,39 +80,82 @@ public class TaskItemAdapter extends ListAdapter<Task, TaskItemAdapter.VH> {
         Long when = t.getExecutionTime() != null ? t.getExecutionTime() : t.getStartDate();
         h.tvWhen.setText(when != null ? dateDf.format(new Date(when)) : "");
 
-        // STATUS BADGE
-        String label = getStatusLabel(h, t.getStatus());
-        int color = getStatusColor(t.getStatus());
+        TaskStatus status = (t.getStatus() == null ? TaskStatus.AKTIVAN : t.getStatus());
+        String label = getStatusLabel(h, status);
+        int color = getStatusColor(status);
         h.tvStatus.setText(label);
         h.tvStatus.setTextColor(color);
 
-        // Klikovi
         h.itemView.setOnClickListener(v -> listener.onOpen(t));
         h.btnMore.setOnClickListener(v -> listener.onOpen(t));
         h.btnDone.setOnClickListener(v -> listener.onDone(t));
         h.btnCancel.setOnClickListener(v -> listener.onCancel(t));
         h.btnPause.setOnClickListener(v -> listener.onPause(t));
         h.btnActive.setOnClickListener(v -> listener.onActive(t));
+
+        applyButtonsState(h, t, status);
+    }
+
+    private void applyButtonsState(@NonNull VH h, @NonNull Task t, @NonNull TaskStatus st) {
+        boolean repeating = isRepeatingLike(t);
+
+        // uvek prikaz za ponavljajuće; sakrij na one-time
+        h.btnPause.setVisibility(repeating ? View.VISIBLE : View.GONE);
+        h.btnActive.setVisibility(repeating ? View.VISIBLE : View.GONE);
+
+        setEnabled(h.btnDone,   false);
+        setEnabled(h.btnCancel, false);
+        setEnabled(h.btnPause,  false);
+        setEnabled(h.btnActive, false);
+
+        // završeni/otkazani/neurađeni -> lock
+        if (st == TaskStatus.URADJEN || st == TaskStatus.OTKAZAN || st == TaskStatus.NEURADJEN) return;
+
+        if (st == TaskStatus.AKTIVAN) {
+            setEnabled(h.btnDone, true);
+            setEnabled(h.btnCancel, true);
+            if (repeating) setEnabled(h.btnPause, true);
+            return;
+        }
+
+        if (st == TaskStatus.PAUZIRAN && repeating) {
+            setEnabled(h.btnActive, true);
+            return;
+        }
+    }
+
+    private boolean isRepeatingLike(@NonNull Task t) {
+        if (Boolean.TRUE.equals(t.getIsRepeating())) return true;
+        Integer ri = t.getRepeatInterval();
+        String ru = t.getRepeatUnit();
+        return ri != null && ri > 0 && ru != null && ru.trim().length() > 0;
+    }
+
+    private void setEnabled(View v, boolean enabled) {
+        v.setEnabled(enabled);
+        v.setClickable(enabled);
+        v.setAlpha(enabled ? 1f : 0.35f);
+        v.bringToFront();
     }
 
     private String getStatusLabel(@NonNull VH h, TaskStatus st) {
-        if (st == null) return h.itemView.getContext().getString(R.string.status_active);
         switch (st) {
             case AKTIVAN:   return h.itemView.getContext().getString(R.string.status_active);
             case PAUZIRAN:  return h.itemView.getContext().getString(R.string.status_paused);
             case OTKAZAN:   return h.itemView.getContext().getString(R.string.status_canceled);
             case URADJEN:   return h.itemView.getContext().getString(R.string.status_done);
+            case NEURADJEN: return h.itemView.getContext().getString(R.string.status_missed);
         }
         return h.itemView.getContext().getString(R.string.status_active);
     }
 
     private int getStatusColor(TaskStatus st) {
-        if (st == null) return Color.parseColor("#2E7D32");       // default zeleno (aktivan)
         switch (st) {
-            case AKTIVAN:   return Color.parseColor("#2E7D32");   // zelena
-            case PAUZIRAN:  return Color.parseColor("#EF6C00");   // narandžasta
-            case OTKAZAN:   return Color.parseColor("#C62828");   // crvena
-            case URADJEN:   return Color.parseColor("#1565C0");   // plava
+            case AKTIVAN:   return Color.parseColor("#2E7D32");
+            case PAUZIRAN:  return Color.parseColor("#EF6C00");
+            case OTKAZAN:   return Color.parseColor("#C62828");
+            case URADJEN:   return Color.parseColor("#1565C0");
+            case NEURADJEN: return Color.parseColor("#6D4C41");
         }
         return Color.parseColor("#2E7D32");
     }

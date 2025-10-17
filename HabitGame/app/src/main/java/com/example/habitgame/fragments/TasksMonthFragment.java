@@ -73,7 +73,8 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
         HeaderContainer(@NonNull View view) { super(view); }
     }
 
-    @Nullable @Override
+    @Nullable
+    @Override
     public View onCreateView(@NonNull LayoutInflater inf, @Nullable ViewGroup c, @Nullable Bundle b) {
         View v = inf.inflate(R.layout.fragment_tasks_month, c, false);
 
@@ -85,13 +86,9 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
         dayAdapter = new TaskItemAdapter(this);
         rvDay.setAdapter(dayAdapter);
 
-        // LISTENER za rezultate iz sheet-a → osveži kalendar/listu
-        getParentFragmentManager().setFragmentResultListener(
-                TaskDetailsBottomSheet.FR_RESULT_KEY, this, (key, res) -> loadTasksAndRender()
-        );
-
         setupCalendar();
         loadTasksAndRender();
+
         return v;
     }
 
@@ -106,15 +103,20 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
 
         calendarView.setMonthHeaderBinder(new MonthHeaderFooterBinder<HeaderContainer>() {
             @NonNull @Override
-            public HeaderContainer create(@NonNull View view) { return new HeaderContainer(view); }
-            @Override public void bind(@NonNull HeaderContainer container, @NonNull CalendarMonth month) {
+            public HeaderContainer create(@NonNull View view) {
+                return new HeaderContainer(view);
+            }
+            @Override
+            public void bind(@NonNull HeaderContainer container, @NonNull CalendarMonth month) {
                 setMonthTitle(month);
             }
         });
 
         calendarView.setDayBinder(new MonthDayBinder<DayViewContainer>() {
             @NonNull @Override
-            public DayViewContainer create(@NonNull View view) { return new DayViewContainer(view); }
+            public DayViewContainer create(@NonNull View view) {
+                return new DayViewContainer(view);
+            }
 
             @Override
             public void bind(@NonNull DayViewContainer c, @NonNull CalendarDay day) {
@@ -126,7 +128,7 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
                 long dayMs = toMidnightMs(day.getDate().getYear(),
                         day.getDate().getMonthValue(),
                         day.getDate().getDayOfMonth());
-                boolean isSelected = (selectedDayMs != null && selectedDayMs.equals(dayMs));
+                boolean isSelected = (selectedDayMs != null && selectedDayMs == dayMs);
                 c.card.setChecked(isSelected);
                 c.card.setStrokeColor(isSelected ? Color.BLACK : Color.DKGRAY);
                 c.card.setStrokeWidth(isSelected ? dp(2) : dp(1));
@@ -135,7 +137,7 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
                 List<Task> tasks = tasksByDay.getOrDefault(dayMs, Collections.emptyList());
                 LinkedHashSet<Integer> colors = new LinkedHashSet<>();
                 for (Task t : tasks) {
-                    colors.add(0xFF9E9E9E);
+                    colors.add(0xFF9E9E9E); // ako imaš mapu boja po kategoriji, zameni
                     if (colors.size() == 3) break;
                 }
                 int size = dp(6), m = dp(2);
@@ -162,9 +164,6 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
             setMonthTitle(month);
             return Unit.INSTANCE;
         });
-
-        // inicijalna selekcija = danas
-        if (selectedDayMs == null) selectedDayMs = DateUtils.startOfToday();
     }
 
     private void setMonthTitle(@NonNull CalendarMonth month) {
@@ -184,6 +183,9 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
                     long to   = DateUtils.startOfToday() + 365L * 24 * 60 * 60 * 1000;
 
                     for (Task t : list) {
+                        // auto flip u NEURADJEN
+                        taskService.autoFlipOverdueToMissed(t);
+
                         if (Boolean.TRUE.equals(t.getIsRepeating())) {
                             for (Task inst : RecurrenceScheduler.expandTaskAsInstances(t, from, to)) {
                                 long key = DateUtils.normalizeToMidnight(inst.getExecutionTime());
@@ -198,6 +200,8 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
                         }
                     }
 
+                    if (selectedDayMs == null) selectedDayMs = DateUtils.startOfToday();
+
                     updateDayList();
                     calendarView.notifyCalendarChanged();
                 });
@@ -208,17 +212,13 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
         dayAdapter.submitList(new ArrayList<>(dayList));
     }
 
-    // ---- Klik na task iz liste ispod kalendara → OTVORI SHEET ----
     @Override public void onOpen(Task t) {
-        Long instanceTime = selectedDayMs; // prosledi pojavu kad dolazi iz kalendara
-        TaskDetailsBottomSheet.newInstance(t, instanceTime)
-                .show(getParentFragmentManager(), "taskDetails");
+        TaskDetailsBottomSheet.newInstance(t).show(getParentFragmentManager(), "taskDetails");
     }
-
-    @Override public void onDone(Task t) { new TaskService().markDone(t).addOnSuccessListener(x -> loadTasksAndRender()); }
-    @Override public void onCancel(Task t) { new TaskService().markCanceled(t).addOnSuccessListener(x -> loadTasksAndRender()); }
+    @Override public void onDone(Task t)  { new TaskService().markDone(t).addOnSuccessListener(x -> loadTasksAndRender()); }
+    @Override public void onCancel(Task t){ new TaskService().markCanceled(t).addOnSuccessListener(x -> loadTasksAndRender()); }
     @Override public void onPause(Task t) { new TaskService().markPaused(t).addOnSuccessListener(x -> loadTasksAndRender()); }
-    @Override public void onActive(Task t) { new TaskService().markActive(t).addOnSuccessListener(x -> loadTasksAndRender()); }
+    @Override public void onActive(Task t){ new TaskService().markActive(t).addOnSuccessListener(x -> loadTasksAndRender()); }
 
     private int dp(int v) {
         float d = requireContext().getResources().getDisplayMetrics().density;

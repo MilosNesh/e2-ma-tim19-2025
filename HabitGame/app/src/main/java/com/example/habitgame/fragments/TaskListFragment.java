@@ -52,12 +52,8 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
         adapter = new TaskItemAdapter(this);
         rv.setAdapter(adapter);
 
-        // LISTENER za rezultate iz TaskDetailsBottomSheet (osvežavanje posle akcija)
-        getParentFragmentManager().setFragmentResultListener(
-                TaskDetailsBottomSheet.FR_RESULT_KEY, this, (key, res) -> load()
-        );
+        load();
 
-        // (postojeći) listener ako već koristiš drugi key
         getParentFragmentManager().setFragmentResultListener("taskStatusChanged", this, (key, res) -> {
             String taskId = res.getString("taskId");
             String st = res.getString("newStatus", "AKTIVAN");
@@ -67,7 +63,6 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
             submitOrEmpty();
         });
 
-        load();
         return v;
     }
 
@@ -81,8 +76,8 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
                     current.clear();
 
                     for (Task t : list) {
-                        // u listi ne prikazujemo otkazane
-                        if (t.getStatus() == TaskStatus.OTKAZAN) continue;
+                        // auto flip u NEURADJEN kad je isteklo 3+ dana
+                        taskService.autoFlipOverdueToMissed(t);
 
                         if (repeating) {
                             if (Boolean.TRUE.equals(t.getIsRepeating())) {
@@ -136,62 +131,53 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
     // ---- Listener impl ----
 
     @Override public void onOpen(Task t) {
-        // OTVORI BOTTOM SHEET – ovo je nedostajalo
-        TaskDetailsBottomSheet.newInstance(t)
-                .show(getParentFragmentManager(), "taskDetails");
+        TaskDetailsBottomSheet.newInstance(t).show(getParentFragmentManager(), "taskDetails");
     }
 
     @Override public void onDone(Task t) {
-        TaskStatus old = t.getStatus();
-        Boolean oldCompleted = t.getIsCompleted();
-        applyLocalStatus(t.getId(), TaskStatus.URADJEN, true);
-        submitOrEmpty();
-
-        taskService.markDone(t)
+        new TaskService().markDone(t)
+                .addOnSuccessListener(x -> {
+                    Toast.makeText(getContext(), "✅ Označeno kao urađeno.", Toast.LENGTH_SHORT).show();
+                    load(); // refetch + UI refresh
+                })
                 .addOnFailureListener(e -> {
-                    applyLocalStatus(t.getId(), old, oldCompleted!=null && oldCompleted);
-                    submitOrEmpty();
+                    Toast.makeText(getContext(), "❌ Ne može: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 
     @Override public void onCancel(Task t) {
-        TaskStatus old = t.getStatus();
-        Boolean oldCompleted = t.getIsCompleted();
-        applyLocalStatus(t.getId(), TaskStatus.OTKAZAN, false);
-        submitOrEmpty();
-
-        taskService.markCanceled(t)
+        new TaskService().markCanceled(t)
+                .addOnSuccessListener(x -> {
+                    Toast.makeText(getContext(), "✅ Označeno kao otkazano.", Toast.LENGTH_SHORT).show();
+                    load();
+                })
                 .addOnFailureListener(e -> {
-                    applyLocalStatus(t.getId(), old, oldCompleted!=null && oldCompleted);
-                    submitOrEmpty();
+                    Toast.makeText(getContext(), "❌ Ne može: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 
     @Override public void onPause(Task t) {
-        TaskStatus old = t.getStatus();
-        Boolean oldCompleted = t.getIsCompleted();
-        applyLocalStatus(t.getId(), TaskStatus.PAUZIRAN, false);
-        submitOrEmpty();
-
-        taskService.markPaused(t)
+        new TaskService().markPaused(t)
+                .addOnSuccessListener(x -> {
+                    Toast.makeText(getContext(), "⏸ Pauzirano.", Toast.LENGTH_SHORT).show();
+                    load();
+                })
                 .addOnFailureListener(e -> {
-                    applyLocalStatus(t.getId(), old, oldCompleted!=null && oldCompleted);
-                    submitOrEmpty();
+                    Toast.makeText(getContext(), "❌ Ne može: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 
     @Override public void onActive(Task t) {
-        TaskStatus old = t.getStatus();
-        Boolean oldCompleted = t.getIsCompleted();
-        applyLocalStatus(t.getId(), TaskStatus.AKTIVAN, false);
-        submitOrEmpty();
-
-        taskService.markActive(t)
+        new TaskService().markActive(t)
+                .addOnSuccessListener(x -> {
+                    Toast.makeText(getContext(), "▶️ Aktivirano.", Toast.LENGTH_SHORT).show();
+                    load();
+                })
                 .addOnFailureListener(e -> {
-                    applyLocalStatus(t.getId(), old, oldCompleted!=null && oldCompleted);
-                    submitOrEmpty();
+                    Toast.makeText(getContext(), "❌ Ne može: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
+
 
     private void applyLocalStatus(String taskId, TaskStatus st, boolean completed) {
         boolean remove = (st == TaskStatus.OTKAZAN || st == TaskStatus.URADJEN);

@@ -1,19 +1,18 @@
 package com.example.habitgame.fragments;
 
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.example.habitgame.R;
 import com.example.habitgame.model.Task;
 import com.example.habitgame.model.TaskStatus;
 import com.example.habitgame.services.TaskService;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
-import android.widget.Toast;
 
 public class TaskDetailsBottomSheet extends BottomSheetDialogFragment {
 
@@ -29,7 +28,6 @@ public class TaskDetailsBottomSheet extends BottomSheetDialogFragment {
         return newInstance(t, null);
     }
 
-    // Overload za kalendar – prosleđuješ konkretan instance timestamp (start te pojave)
     public static TaskDetailsBottomSheet newInstance(Task t, @Nullable Long instanceTime){
         TaskDetailsBottomSheet s = new TaskDetailsBottomSheet();
         Bundle b = new Bundle();
@@ -40,7 +38,7 @@ public class TaskDetailsBottomSheet extends BottomSheetDialogFragment {
         b.putString(ARG_WEIGHT, t.getWeight());
         b.putString(ARG_IMP, t.getImportance());
         b.putInt(ARG_XP, t.getXpValue());
-        b.putString(ARG_STATUS, t.getStatus()==null? "KREIRAN" : t.getStatus().name());
+        b.putString(ARG_STATUS, t.getStatus()==null? "AKTIVAN" : t.getStatus().name());
         if (instanceTime != null) b.putLong(ARG_INSTANCE_TIME, instanceTime);
         s.setArguments(b);
         return s;
@@ -49,17 +47,19 @@ public class TaskDetailsBottomSheet extends BottomSheetDialogFragment {
     private final TaskService svc = new TaskService();
 
     @Nullable @Override
-    public View onCreateView(@NonNull LayoutInflater inf, @Nullable ViewGroup c, @Nullable Bundle b) {
-        View v = inf.inflate(R.layout.bottomsheet_task_details, c, false);
+    public android.view.View onCreateView(@NonNull android.view.LayoutInflater inf,
+                                          @Nullable android.view.ViewGroup c,
+                                          @Nullable Bundle b) {
+        android.view.View v = inf.inflate(R.layout.bottomsheet_task_details, c, false);
 
         String id   = requireArguments().getString(ARG_ID);
         String name = requireArguments().getString(ARG_NAME);
         String desc = requireArguments().getString(ARG_DESC);
-        boolean rep = requireArguments().getBoolean(ARG_REP, false);
+        boolean repFlag = requireArguments().getBoolean(ARG_REP, false);
         String w    = requireArguments().getString(ARG_WEIGHT);
         String imp  = requireArguments().getString(ARG_IMP);
         int xp      = requireArguments().getInt(ARG_XP, 0);
-        String st   = requireArguments().getString(ARG_STATUS, "KREIRAN");
+        String st   = requireArguments().getString(ARG_STATUS, "AKTIVAN");
         Long instanceTime = requireArguments().containsKey(ARG_INSTANCE_TIME)
                 ? requireArguments().getLong(ARG_INSTANCE_TIME) : null;
 
@@ -67,7 +67,7 @@ public class TaskDetailsBottomSheet extends BottomSheetDialogFragment {
         t.setId(id);
         t.setName(name);
         t.setDescription(desc);
-        t.setIsRepeating(rep);
+        t.setIsRepeating(repFlag);
         t.setWeight(w);
         t.setImportance(imp);
         t.setXpValue(xp);
@@ -78,7 +78,7 @@ public class TaskDetailsBottomSheet extends BottomSheetDialogFragment {
         TextView meta = v.findViewById(R.id.tv_meta);
         title.setText(name);
         tvDesc.setText(desc == null ? "" : desc);
-        String metaTxt = (rep? getString(R.string.repeating) : getString(R.string.one_time))
+        String metaTxt = (repFlag? getString(R.string.repeating) : getString(R.string.one_time))
                 + " · " + getString(R.string.weight_s, (w==null?"-":w))
                 + " · " + getString(R.string.importance_s, (imp==null?"-":imp))
                 + " · " + getString(R.string.xp_s, xp);
@@ -91,57 +91,112 @@ public class TaskDetailsBottomSheet extends BottomSheetDialogFragment {
         MaterialButton bEdit  = v.findViewById(R.id.btn_edit);
         MaterialButton bDelete= v.findViewById(R.id.btn_delete);
 
-        // Statusne akcije
-        bDone.setOnClickListener(x -> svc.markDone(t).addOnSuccessListener(a->dismiss()));
-        bCancel.setOnClickListener(x -> svc.markCanceled(t).addOnSuccessListener(a->dismiss()));
-        bPause.setOnClickListener(x -> svc.markPaused(t).addOnSuccessListener(a->dismiss()));
-        bActive.setOnClickListener(x -> svc.markActive(t).addOnSuccessListener(a->dismiss()));
+        TaskStatus status = (t.getStatus()==null? TaskStatus.AKTIVAN : t.getStatus());
+        boolean repeating = isRepeatingLike(t) || repFlag;
 
-        // Edit – otvara postojeći EditTaskFragment sa istim argumentima
+        // prikaži/ sakrij dugmad specifična za ponavljajuće
+        bPause.setVisibility(repeating ? android.view.View.VISIBLE : android.view.View.GONE);
+        bActive.setVisibility(repeating ? android.view.View.VISIBLE : android.view.View.GONE);
+
+        // default disable
+        setEnabled(bDone,   false);
+        setEnabled(bCancel, false);
+        setEnabled(bPause,  false);
+        setEnabled(bActive, false);
+
+        // enable po pravilima
+        if (status == TaskStatus.AKTIVAN) {
+            setEnabled(bDone, true);
+            setEnabled(bCancel, true);
+            if (repeating) setEnabled(bPause, true);
+        } else if (status == TaskStatus.PAUZIRAN && repeating) {
+            setEnabled(bActive, true);
+        }
+
+        // klikovi sa feedbackom + rezultat ka parentu
+        bDone.setOnClickListener(x -> svc.markDone(t)
+                .addOnSuccessListener(a -> {
+                    Toast.makeText(getContext(), R.string.status_done, Toast.LENGTH_SHORT).show();
+                    notifyChanged("DONE", id);
+                    dismiss();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show())
+        );
+
+        bCancel.setOnClickListener(x -> svc.markCanceled(t)
+                .addOnSuccessListener(a -> {
+                    Toast.makeText(getContext(), R.string.status_canceled, Toast.LENGTH_SHORT).show();
+                    notifyChanged("CANCELED", id);
+                    dismiss();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show())
+        );
+
+        bPause.setOnClickListener(x -> svc.markPaused(t)
+                .addOnSuccessListener(a -> {
+                    Toast.makeText(getContext(), R.string.status_paused, Toast.LENGTH_SHORT).show();
+                    notifyChanged("PAUSED", id);
+                    dismiss();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show())
+        );
+
+        bActive.setOnClickListener(x -> svc.markActive(t)
+                .addOnSuccessListener(a -> {
+                    Toast.makeText(getContext(), R.string.status_active, Toast.LENGTH_SHORT).show();
+                    notifyChanged("ACTIVE", id);
+                    dismiss();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show())
+        );
+
         bEdit.setOnClickListener(x -> {
             Bundle args = new Bundle();
             args.putString(EditTaskFragment.ARG_ID, id);
             args.putString(EditTaskFragment.ARG_NAME, name);
             args.putString(EditTaskFragment.ARG_DESC, desc);
-            args.putBoolean(EditTaskFragment.ARG_IS_REPEATING, rep);
-            args.putString(EditTaskFragment.ARG_STATUS, st);
+            args.putBoolean(EditTaskFragment.ARG_IS_REPEATING, repeating);
+            args.putString(EditTaskFragment.ARG_STATUS, status.name());
             args.putString(EditTaskFragment.ARG_WEIGHT, w);
             args.putString(EditTaskFragment.ARG_IMPORTANCE, imp);
-            // prosleđivanje vremena – ako ti treba za jednokratne popunu datuma:
-            // args.putLong(EditTaskFragment.ARG_EXECUTION_TIME, ... );
-            // args.putLong(EditTaskFragment.ARG_START_DATE, ... );
-
             dismiss();
             androidx.navigation.fragment.NavHostFragment.findNavController(this)
                     .navigate(R.id.editTaskFragment, args);
         });
 
-        // Delete
         bDelete.setOnClickListener(x -> {
-            if (t.getStatus() == TaskStatus.URADJEN) {
+            if (status == TaskStatus.URADJEN || status == TaskStatus.OTKAZAN || status == TaskStatus.NEURADJEN) {
                 Toast.makeText(getContext(), R.string.err_cannot_delete_finished, Toast.LENGTH_LONG).show();
                 return;
             }
-            if (!t.getIsRepeating()) {
-                svc.deleteTaskOneTime(t)
-                        .addOnSuccessListener(a -> {
-                            notifyChanged("DELETED", id);
-                            dismiss();
-                        })
-                        .addOnFailureListener(e ->
-                                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show());
-            } else {
-                svc.deleteTaskFutureOccurrences(t, instanceTime)
-                        .addOnSuccessListener(a -> {
-                            notifyChanged("CUT_FUTURE", id);
-                            dismiss();
-                        })
-                        .addOnFailureListener(e ->
-                                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show());
-            }
+            new TaskService().deleteTask(id)
+                    .addOnSuccessListener(a -> {
+                        Toast.makeText(getContext(), R.string.delete, Toast.LENGTH_SHORT).show();
+                        notifyChanged("DELETED", id);
+                        dismiss();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show());
         });
 
         return v;
+    }
+
+    private boolean isRepeatingLike(@NonNull Task t) {
+        if (Boolean.TRUE.equals(t.getIsRepeating())) return true;
+        Integer ri = t.getRepeatInterval();
+        String ru = t.getRepeatUnit();
+        return ri != null && ri > 0 && ru != null && ru.trim().length() > 0;
+    }
+
+    private void setEnabled(@NonNull MaterialButton b, boolean enabled) {
+        b.setEnabled(enabled);
+        b.setClickable(enabled);
+        b.setAlpha(enabled ? 1f : 0.35f);
     }
 
     private void notifyChanged(String action, String taskId){

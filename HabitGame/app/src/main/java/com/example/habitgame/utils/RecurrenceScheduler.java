@@ -1,6 +1,7 @@
 package com.example.habitgame.utils;
 
 import com.example.habitgame.model.Task;
+import com.example.habitgame.model.TaskStatus;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -27,14 +28,13 @@ public final class RecurrenceScheduler {
         toMs   = DateUtils.ensureMillis(toMs);
 
         // 1) Non-repeating → jedna eventualna pojava (executionTime ili startDate)
-        if (!Boolean.TRUE.equals(task.getIsRepeating())
-                || task.getRepeatInterval() == null
-                || task.getRepeatUnit() == null) {
-
+        if (!isRepeatingLike(task)) {
             Long when = task.getExecutionTime() != null ? task.getExecutionTime() : task.getStartDate();
             if (when == null) return out;
             long occ = DateUtils.normalizeToMidnight(when);
-            if (occ >= DateUtils.normalizeToMidnight(fromMs) && occ <= DateUtils.normalizeToMidnight(toMs)) {
+            long wFrom = DateUtils.normalizeToMidnight(fromMs);
+            long wTo   = DateUtils.normalizeToMidnight(toMs);
+            if (occ >= wFrom && occ <= wTo) {
                 out.add(occ);
             }
             return out;
@@ -54,11 +54,12 @@ public final class RecurrenceScheduler {
 
         if (start > seriesEnd) return out; // sve posle opsega
 
-        int interval = Math.max(1, task.getRepeatInterval());
+        int interval = Math.max(1, safeInt(task.getRepeatInterval(), 1));
         Unit unit = Unit.from(task.getRepeatUnit());
 
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(start);
+        normalizeMidnight(cal);
 
         // Ako start < windowStart, fast-forward do prve pojave >= windowStart
         fastForward(cal, windowStart, interval, unit);
@@ -88,7 +89,9 @@ public final class RecurrenceScheduler {
     }
 
     /**
-     * Pomoćna: napravi "vizuelne" instance Task-a (kopije sa postavljenim executionTime).
+     * Pravi "vizuelne" instance Task-a (kopije sa postavljenim executionTime).
+     * **VAŽNO**: Instanci eksplicitno postavljamo isRepeating=true i kopiramo repeatInterval/Unit,
+     * kako bi UI tretirao pojavu kao ponavljajući zadatak (Pauziraj/Aktiviraj dugmad).
      */
     public static List<Task> expandTaskAsInstances(Task source, long fromMs, long toMs) {
         List<Task> list = new ArrayList<>();
@@ -102,9 +105,22 @@ public final class RecurrenceScheduler {
             copy.setWeight(source.getWeight());
             copy.setImportance(source.getImportance());
             copy.setXpValue(source.getXpValue());
+
             copy.setExecutionTime(when);
-            copy.setIsRepeating(false); // instanca za prikaz
-            copy.setStatus(source.getStatus());
+
+            // <<< KLJUČNO: tretiramo instancu kao ponavljajuću
+            copy.setIsRepeating(true);
+            copy.setStartDate(source.getStartDate());
+            copy.setEndDate(source.getEndDate());
+            copy.setRepeatInterval(source.getRepeatInterval());
+            copy.setRepeatUnit(source.getRepeatUnit());
+
+            copy.setIsCompleted(false);
+            copy.setCreationTimestamp(source.getCreationTimestamp());
+            copy.setLastCompletionTimestamp(source.getLastCompletionTimestamp());
+            copy.setCompletionsTodayCount(source.getCompletionsTodayCount());
+
+            copy.setStatus(source.getStatus() == null ? TaskStatus.AKTIVAN : source.getStatus());
             list.add(copy);
         }
         return list;
@@ -112,30 +128,44 @@ public final class RecurrenceScheduler {
 
     // ---------------- internals ----------------
 
-    private enum Unit { DAY, WEEK;
+    private static boolean isRepeatingLike(Task t) {
+        if (Boolean.TRUE.equals(t.getIsRepeating())) return true;
+        Integer ri = t.getRepeatInterval();
+        String ru = t.getRepeatUnit();
+        return ri != null && ri > 0 && ru != null && ru.trim().length() > 0;
+    }
+
+    private enum Unit { DAY, WEEK, MONTH;
 
         static Unit from(String raw) {
             if (raw == null) return DAY;
             String u = raw.toLowerCase(Locale.ROOT).trim();
             switch (u) {
-                case "nedelja": return WEEK;
-                case "dan": return DAY;
-                default:      return DAY;
+                case "nedelja":
+                case "week":   return WEEK;
+                case "mesec":
+                case "month":  return MONTH;
+                case "dan":
+                case "day":
+                default:       return DAY;
             }
         }
     }
 
     private static void addInterval(Calendar cal, int interval, Unit unit) {
         switch (unit) {
-            case WEEK:  cal.add(Calendar.WEEK_OF_YEAR, interval); break;
+            case WEEK:
+                cal.add(Calendar.WEEK_OF_YEAR, interval);
+                break;
+            case MONTH:
+                cal.add(Calendar.MONTH, interval);
+                break;
             case DAY:
-            default:    cal.add(Calendar.DAY_OF_YEAR,  interval); break;
+            default:
+                cal.add(Calendar.DAY_OF_YEAR,  interval);
+                break;
         }
-        // osiguraj "ponoć"
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
+        normalizeMidnight(cal);
     }
 
     /** Pomeranje do prve pojave >= windowStart da izbegnemo veliki broj koraka. */
@@ -158,6 +188,30 @@ public final class RecurrenceScheduler {
                 while (cal.getTimeInMillis() < windowStart) addInterval(cal, interval, unit);
                 break;
             }
+            case MONTH: {
+                Calendar ws = Calendar.getInstance();
+                ws.setTimeInMillis(windowStart);
+                int ymStart = cal.get(Calendar.YEAR) * 12 + cal.get(Calendar.MONTH);
+                int ymWindow= ws.get(Calendar.YEAR)  * 12 + ws.get(Calendar.MONTH);
+                int diffMonths = ymWindow - ymStart;
+                if (diffMonths > 0) {
+                    int steps = diffMonths / interval;
+                    if (steps > 0) cal.add(Calendar.MONTH, steps * interval);
+                }
+                while (cal.getTimeInMillis() < windowStart) addInterval(cal, interval, unit);
+                break;
+            }
         }
+    }
+
+    private static void normalizeMidnight(Calendar cal) {
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+    }
+
+    private static int safeInt(Integer v, int def) {
+        return (v == null ? def : v);
     }
 }

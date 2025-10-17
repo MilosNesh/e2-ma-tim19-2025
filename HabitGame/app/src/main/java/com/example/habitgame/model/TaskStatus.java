@@ -4,5 +4,6 @@ public enum TaskStatus {
     URADJEN,
     PAUZIRAN,
     AKTIVAN,
-    OTKAZAN
+    OTKAZAN,
+    NEURADJEN
 }

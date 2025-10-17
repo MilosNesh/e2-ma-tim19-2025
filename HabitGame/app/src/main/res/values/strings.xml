@@ -132,5 +132,13 @@
     <string name="status_canceled">Otkazan</string>
     <string name="status_done">Urađen</string>
     <string name="status_created">Kreiran</string>
+    <string name="err_action_only_active">Akcija je dostupna samo za aktivne zadatke.</string>
+    <string name="err_pause_only_repeating">Pauza je dostupna samo za ponavljajuće zadatke.</string>
+    <string name="err_only_paused_to_active">Samo pauziran zadatak može da se aktivira.</string>
+    <string name="status_missed">NEURADJEN</string>
+    <string name="odaberi_datum_zavrsetka">Odaberi datum završetka (opciono)</string>
+    <string name="not_implemented">Nije implementirano</string>
+
+
 
 </resources>
