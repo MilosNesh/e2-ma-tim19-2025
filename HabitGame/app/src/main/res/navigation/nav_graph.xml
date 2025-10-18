@@ -14,6 +14,15 @@
         android:name="com.example.habitgame.fragments.TaskCreationFragment"
         android:label="Kreiraj Zadatak" />
     <fragment
+        android:id="@+id/repeatedTaskCreationFragment"
+        android:name="com.example.habitgame.fragments.RepeatedTaskCreateFragment"
+        android:label="Novi ponavljajući zadatak"
+        tools:layout="@layout/fragment_repeated_create" />
+    <fragment
+        android:id="@+id/repeatedTaskEditFragment"
+        android:name="com.example.habitgame.fragments.RepeatedTaskEditFragment"
+        android:label="@string/edit" />
+    <fragment
         android:id="@+id/tasksMonthFragment"
         android:name="com.example.habitgame.fragments.TasksMonthFragment"
         android:label="@string/calendar"

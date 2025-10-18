@@ -14,71 +14,96 @@ import com.alamkanak.weekview.WeekViewEntity;
 import com.example.habitgame.R;
 import com.example.habitgame.model.Category;
 import com.example.habitgame.model.Task;
+import com.example.habitgame.model.RepeatedTaskOccurence;
 import com.example.habitgame.repositories.CategoryRepository;
 import com.example.habitgame.repositories.TaskRepository;
+import com.example.habitgame.repositories.RepeatedTaskOccurrenceRepository;
 
 import java.util.*;
 
+/**
+ * Kombinovano: renderuje i Task i RepeatedTaskOccurrence u WeekView bez dodatnih "event" klasa.
+ */
 public class TasksCalendarFragment extends Fragment {
 
     private WeekView weekView;
 
     private final Map<String, String> categoryColors = new HashMap<>();
     private List<Task> allTasks = new ArrayList<>();
+    private List<RepeatedTaskOccurence> allOcc = new ArrayList<>();
 
-    public static class MyEvent {
-        public final long id;
-        public final String title;
-        public final Calendar start;
-        public final Calendar end;
-        public final int color;
-        public final Task taskRef;
+    private class MyAdapter extends WeekView.SimpleAdapter<Object> {
+        @NonNull @Override
+        public WeekViewEntity onCreateEntity(@NonNull Object item) {
+            String title;
+            Calendar start;
+            Calendar end;
+            int color = 0xFF9E9E9E;
 
-        public MyEvent(long id, String title, Calendar start, Calendar end, int color, Task taskRef) {
-            this.id = id;
-            this.title = title;
-            this.start = start;
-            this.end = end;
-            this.color = color;
-            this.taskRef = taskRef;
-        }
-    }
+            if (item instanceof Task) {
+                Task t = (Task) item;
+                title = (t.getName() != null ? t.getName() : "Zadatak");
+                if (t.getXpValue() > 0) title = title + " · XP " + t.getXpValue();
 
-    private class MySimpleAdapter extends WeekView.SimpleAdapter<MyEvent> {
+                Long when = (t.getExecutionTime() != null) ? t.getExecutionTime() : t.getStartDate();
+                if (when == null) when = System.currentTimeMillis();
+                start = millisToCal(when);
+                end = (Calendar) start.clone();
+                end.add(Calendar.MINUTE, 60);
 
-        @NonNull
-        @Override
-        public WeekViewEntity onCreateEntity(@NonNull MyEvent item) {
+                // boja po kategoriji:
+                if (t.getCategoryId() != null) {
+                    String hex = categoryColors.get(t.getCategoryId());
+                    if (hex != null && hex.matches("^#[0-9A-Fa-f]{6}$")) {
+                        try { color = Color.parseColor(hex); } catch (Exception ignored){}
+                    }
+                }
+            } else {
+                RepeatedTaskOccurence oc = (RepeatedTaskOccurence) item;
+                title = (oc.getTaskName() != null ? oc.getTaskName() : "Ponavljajući");
+                if (oc.getXp() > 0) title = title + " · XP " + oc.getXp();
+                long when = (oc.getWhen() != null ? oc.getWhen() : System.currentTimeMillis());
+                start = millisToCal(when);
+                end = (Calendar) start.clone();
+                end.add(Calendar.MINUTE, 60);
+                // boju po kategoriji možeš dodati u Occurrence model (categoryId) i mapirati ovde, ako je imaš
+            }
+
             WeekViewEntity.Style style = new WeekViewEntity.Style.Builder()
-                    .setBackgroundColor(item.color)
+                    .setBackgroundColor(color)
                     .setTextColor(Color.WHITE)
                     .build();
 
             return new WeekViewEntity.Event.Builder(item)
-                    .setId(item.id)
-                    .setTitle(item.title)
-                    .setStartTime(item.start)
-                    .setEndTime(item.end)
+                    .setId(System.identityHashCode(item))
+                    .setTitle(title)
+                    .setStartTime(start)
+                    .setEndTime(end)
                     .setStyle(style)
                     .build();
         }
 
         @Override
-        public void onEventClick(@NonNull MyEvent data) {
-            TaskDetailsBottomSheet.newInstance(data.taskRef)
-                    .show(getParentFragmentManager(), "taskDetails");
+        public void onEventClick(@NonNull Object data) {
+            if (data instanceof Task) {
+                TaskDetailsBottomSheet.newInstance((Task) data)
+                        .show(getParentFragmentManager(), "taskDetails");
+            } else if (data instanceof RepeatedTaskOccurence) {
+                // Ako već imaš poseban bottom sheet za occurrence — pozovi ga ovde.
+                RepeatedTaskOccurrenceDetailsBottomSheet.newInstance((RepeatedTaskOccurence) data)
+                        .show(getParentFragmentManager(), "occDetails");
+            }
         }
     }
 
-    private MySimpleAdapter adapter;
+    private MyAdapter adapter;
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public View onCreateView(@NonNull LayoutInflater inf, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inf.inflate(R.layout.fragment_tasks_calendar, container, false);
         weekView = v.findViewById(R.id.weekView);
 
-        adapter = new MySimpleAdapter();
+        adapter = new MyAdapter();
         weekView.setAdapter(adapter);
 
         loadDataThenRender();
@@ -86,6 +111,7 @@ public class TasksCalendarFragment extends Fragment {
     }
 
     private void loadDataThenRender() {
+        // 1) Učitaj boje kategorija
         CategoryRepository.getForCurrentUser()
                 .addOnSuccessListener(list -> {
                     categoryColors.clear();
@@ -98,96 +124,47 @@ public class TasksCalendarFragment extends Fragment {
                             }
                         }
                     }
-                    loadTasks();
+                    // 2) Učitaj taskove i occurrence pa prikaži
+                    loadItems();
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Greška kategorije: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
-    private void loadTasks() {
+    private void loadItems() {
+        Calendar from = Calendar.getInstance();
+        from.add(Calendar.DAY_OF_YEAR, -30);
+        Calendar to = Calendar.getInstance();
+        to.add(Calendar.DAY_OF_YEAR, 60);
+
+        long fromMs = from.getTimeInMillis();
+        long toMs = to.getTimeInMillis();
+
+        // Tasks:
         TaskRepository.getTasksForCurrentUser()
                 .addOnSuccessListener(list -> {
                     allTasks = (list != null) ? list : new ArrayList<>();
+                    // Filtriraj na raspon, obične i ponavljajuće **osnovu**; instance se u kalendaru crtaju kao “slot” bez ekspanzije
+                    List<Object> render = new ArrayList<>();
 
-                    Calendar from = Calendar.getInstance();
-                    from.add(Calendar.DAY_OF_YEAR, -30);
-                    Calendar to = Calendar.getInstance();
-                    to.add(Calendar.DAY_OF_YEAR, 60);
+                    for (Task t : allTasks) {
+                        Long when = (t.getExecutionTime() != null) ? t.getExecutionTime() : t.getStartDate();
+                        if (when == null) continue;
+                        if (when >= fromMs && when <= toMs) render.add(t);
+                    }
 
-                    List<MyEvent> events = buildEventsForRange(from, to);
-                    adapter.submitList(events);
+                    // Occurrences:
+                    RepeatedTaskOccurrenceRepository.getForCurrentUserBetween(fromMs, toMs)
+                            .addOnSuccessListener(occ -> {
+                                allOcc = (occ != null) ? occ : new ArrayList<>();
+                                render.addAll(allOcc);
+                                adapter.submitList(render);
+                            })
+                            .addOnFailureListener(e ->
+                                    Toast.makeText(getContext(), "Greška occurrence: " + e.getMessage(), Toast.LENGTH_LONG).show());
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Greška zadaci: " + e.getMessage(), Toast.LENGTH_LONG).show());
-    }
-
-    private List<MyEvent> buildEventsForRange(Calendar rangeStart, Calendar rangeEnd) {
-        List<MyEvent> out = new ArrayList<>();
-
-        for (Task t : allTasks) {
-            int color = 0xFF9E9E9E;
-            if (t.getCategoryId() != null) {
-                String hex = categoryColors.get(t.getCategoryId());
-                if (hex != null && hex.matches("^#[0-9A-Fa-f]{6}$")) {
-                    try { color = Color.parseColor(hex); } catch (Exception ignored) {}
-                }
-            }
-
-            if (t.getExecutionTime() != null) {
-                Calendar s = millisToCal(t.getExecutionTime());
-                Calendar e = (Calendar) s.clone();
-                e.add(Calendar.MINUTE, 60);
-                addIfInRange(out, t, s, e, color, rangeStart, rangeEnd);
-            } else if (t.getStartDate() != null) {
-                Calendar s = millisToCal(t.getStartDate());
-                Calendar e = (t.getEndDate() != null) ? millisToCal(t.getEndDate()) : (Calendar) s.clone();
-                if (t.getEndDate() == null) e.add(Calendar.MINUTE, 60);
-
-                if (!t.getIsRepeating()) {
-                    addIfInRange(out, t, s, e, color, rangeStart, rangeEnd);
-                } else {
-                    int step = (t.getRepeatInterval() != null && t.getRepeatInterval() > 0) ? t.getRepeatInterval() : 1;
-                    String unit = t.getRepeatUnit() != null ? t.getRepeatUnit().toLowerCase(Locale.ROOT) : "dan";
-
-                    Calendar curS = (Calendar) s.clone();
-                    Calendar curE = (Calendar) e.clone();
-
-                    Calendar hardEnd = null;
-                    if (t.getEndDate() != null) hardEnd = millisToCal(t.getEndDate());
-
-                    while (curS.before(rangeEnd)) {
-                        if (curE.after(rangeStart)) {
-                            addIfInRange(out, t, curS, curE, color, rangeStart, rangeEnd);
-                        }
-                        switch (unit) {
-                            case "nedelja":
-                            case "week":
-                                curS.add(Calendar.WEEK_OF_YEAR, step); curE.add(Calendar.WEEK_OF_YEAR, step); break;
-                            case "mesec":
-                            case "month":
-                                curS.add(Calendar.MONTH, step);       curE.add(Calendar.MONTH,       step); break;
-                            case "dan":
-                            case "day":
-                            default:
-                                curS.add(Calendar.DAY_OF_YEAR, step);  curE.add(Calendar.DAY_OF_YEAR, step);  break;
-                        }
-                        if (hardEnd != null && curS.after(hardEnd)) break;
-                    }
-                }
-            }
-        }
-        return out;
-    }
-
-    private void addIfInRange(List<MyEvent> out, Task t, Calendar s, Calendar e, int color,
-                              Calendar from, Calendar to) {
-        if (e.before(from) || s.after(to)) return;
-
-        long id = (t.getId() != null) ? t.getId().hashCode() : System.identityHashCode(t);
-        String title = (t.getName() != null) ? t.getName() : "Zadatak";
-        if (t.getXpValue() > 0) title = title + " · XP " + t.getXpValue();
-
-        out.add(new MyEvent(id, title, (Calendar) s.clone(), (Calendar) e.clone(), color, t));
     }
 
     private Calendar millisToCal(long millis) {

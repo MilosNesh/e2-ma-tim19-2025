@@ -15,11 +15,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.habitgame.R;
 import com.example.habitgame.adapters.TaskItemAdapter;
+import com.example.habitgame.model.RepeatedTaskOccurence;
 import com.example.habitgame.model.Task;
 import com.example.habitgame.model.TaskStatus;
+import com.example.habitgame.repositories.RepeatedTaskOccurrenceRepository;
+import com.example.habitgame.repositories.TaskRepository;
+import com.example.habitgame.services.RepeatedTaskOccurrenceService;
 import com.example.habitgame.services.TaskService;
 import com.example.habitgame.utils.DateUtils;
-import com.example.habitgame.utils.RecurrenceScheduler;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +40,9 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
     private RecyclerView rv;
     private TextView tvEmpty;
     private TaskItemAdapter adapter;
+
     private final TaskService taskService = new TaskService();
+    private final RepeatedTaskOccurrenceService occService = new RepeatedTaskOccurrenceService();
 
     private final List<Task> current = new ArrayList<>();
 
@@ -54,6 +59,7 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
 
         load();
 
+        // opcioni lokalni refresh sa drugih ekrana
         getParentFragmentManager().setFragmentResultListener("taskStatusChanged", this, (key, res) -> {
             String taskId = res.getString("taskId");
             String st = res.getString("newStatus", "AKTIVAN");
@@ -67,23 +73,20 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
     }
 
     private void load() {
-        taskService.getTasksForCurrentUser()
-                .addOnSuccessListener(list -> {
-                    if (list == null) list = new ArrayList<>();
-                    long from = DateUtils.startOfToday();
-                    long to   = addMonths(from, 6);
+        current.clear();
 
-                    current.clear();
+        final long from = DateUtils.startOfToday();
+        final long to   = addMonths(from, 6);
 
-                    for (Task t : list) {
-                        // auto flip u NEURADJEN kad je isteklo 3+ dana
-                        taskService.autoFlipOverdueToMissed(t);
+        if (!repeating) {
+            // ——— JEDNOKRATNI ———
+            TaskRepository.getTasksForCurrentUser()
+                    .addOnSuccessListener(list -> {
+                        if (list == null) list = new ArrayList<>();
+                        for (Task t : list) {
+                            // auto flip 3-dana na obične
+                            taskService.autoFlipOverdueToMissed(t);
 
-                        if (repeating) {
-                            if (Boolean.TRUE.equals(t.getIsRepeating())) {
-                                current.addAll(RecurrenceScheduler.expandTaskAsInstances(t, from, to));
-                            }
-                        } else {
                             if (!Boolean.TRUE.equals(t.getIsRepeating())) {
                                 Long when = (t.getExecutionTime()!=null ? t.getExecutionTime() : t.getStartDate());
                                 if (when != null && DateUtils.isTodayOrFuture(when)) {
@@ -91,13 +94,26 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
                                 }
                             }
                         }
-                    }
+                        sortByTime(current);
+                        submitOrEmpty();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(getContext(),"Greška: "+e.getMessage(),Toast.LENGTH_LONG).show());
 
-                    sortByTime(current);
-                    submitOrEmpty();
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(getContext(),"Greška: "+e.getMessage(),Toast.LENGTH_LONG).show());
+        } else {
+            // ——— PONAVLJAJUĆI → OCCURRENCES ———
+            RepeatedTaskOccurrenceRepository.getForCurrentUserBetween(from, to)
+                    .addOnSuccessListener(occs -> {
+                        if (occs == null) occs = Collections.emptyList();
+                        for (RepeatedTaskOccurence oc : occs) {
+                            current.add(mapOccurrenceToDisplayTask(oc));
+                        }
+                        sortByTime(current);
+                        submitOrEmpty();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(getContext(),"Greška: "+e.getMessage(),Toast.LENGTH_LONG).show());
+        }
     }
 
     private static long addMonths(long from, int months){
@@ -131,53 +147,99 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
     // ---- Listener impl ----
 
     @Override public void onOpen(Task t) {
-        TaskDetailsBottomSheet.newInstance(t).show(getParentFragmentManager(), "taskDetails");
+        if (isOccurrenceDisplay(t)) {
+            // otvori detalje pojave
+            RepeatedTaskOccurrenceDetailsBottomSheet.newInstance(mapDisplayTaskIdToOccurrence(t))
+                    .show(getParentFragmentManager(), "occDetails");
+        } else {
+            TaskDetailsBottomSheet.newInstance(t).show(getParentFragmentManager(), "taskDetails");
+        }
     }
 
     @Override public void onDone(Task t) {
-        new TaskService().markDone(t)
-                .addOnSuccessListener(x -> {
-                    Toast.makeText(getContext(), "✅ Označeno kao urađeno.", Toast.LENGTH_SHORT).show();
-                    load(); // refetch + UI refresh
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "❌ Ne može: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
+        if (isOccurrenceDisplay(t)) {
+            RepeatedTaskOccurence oc = mapDisplayTaskIdToOccurrence(t);
+            occService.markDone(oc)
+                    .addOnSuccessListener(x -> {
+                        Toast.makeText(getContext(), "✅ +" + oc.getXp() + " XP", Toast.LENGTH_SHORT).show();
+                        load();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(getContext(), "❌ " + e.getMessage(), Toast.LENGTH_LONG).show());
+        } else {
+            new TaskService().markDone(t)
+                    .addOnSuccessListener(x -> {
+                        Toast.makeText(getContext(), "✅ Označeno kao urađeno.", Toast.LENGTH_SHORT).show();
+                        load();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(getContext(), "❌ " + e.getMessage(), Toast.LENGTH_LONG).show());
+        }
     }
 
     @Override public void onCancel(Task t) {
-        new TaskService().markCanceled(t)
-                .addOnSuccessListener(x -> {
-                    Toast.makeText(getContext(), "✅ Označeno kao otkazano.", Toast.LENGTH_SHORT).show();
-                    load();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "❌ Ne može: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
+        if (isOccurrenceDisplay(t)) {
+            RepeatedTaskOccurence oc = mapDisplayTaskIdToOccurrence(t);
+            occService.markCanceled(oc)
+                    .addOnSuccessListener(x -> {
+                        Toast.makeText(getContext(), "✅ Otkazano.", Toast.LENGTH_SHORT).show();
+                        load();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(getContext(), "❌ " + e.getMessage(), Toast.LENGTH_LONG).show());
+        } else {
+            new TaskService().markCanceled(t)
+                    .addOnSuccessListener(x -> {
+                        Toast.makeText(getContext(), "✅ Otkazano.", Toast.LENGTH_SHORT).show();
+                        load();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(getContext(), "❌ " + e.getMessage(), Toast.LENGTH_LONG).show());
+        }
     }
 
-    @Override public void onPause(Task t) {
-        new TaskService().markPaused(t)
-                .addOnSuccessListener(x -> {
-                    Toast.makeText(getContext(), "⏸ Pauzirano.", Toast.LENGTH_SHORT).show();
-                    load();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "❌ Ne može: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
+    // ---- helpers ----
+
+    private boolean isOccurrenceDisplay(@NonNull Task t) {
+        String id = t.getId();
+        return id != null && id.startsWith("occ:");
     }
 
-    @Override public void onActive(Task t) {
-        new TaskService().markActive(t)
-                .addOnSuccessListener(x -> {
-                    Toast.makeText(getContext(), "▶️ Aktivirano.", Toast.LENGTH_SHORT).show();
-                    load();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "❌ Ne može: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
+    private RepeatedTaskOccurence mapDisplayTaskIdToOccurrence(@NonNull Task t) {
+        RepeatedTaskOccurence oc = new RepeatedTaskOccurence();
+        oc.setId(t.getId().substring("occ:".length()));
+        oc.setUserId(t.getUserId());
+        oc.setTaskName(t.getName());
+        oc.setWhen(t.getExecutionTime());
+        oc.setXp(t.getXpValue());
+        oc.setCompleted(t.getIsCompleted());
+        oc.setCompletedAt(t.getLastCompletionTimestamp());
+        oc.setStatus(t.getStatus());
+        return oc;
     }
 
+    private Task mapOccurrenceToDisplayTask(@NonNull RepeatedTaskOccurence oc) {
+        Task t = new Task();
+        t.setId("occ:" + oc.getId());
+        t.setUserId(oc.getUserId());
+        t.setName(oc.getTaskName() != null ? oc.getTaskName() : "Ponavljajući");
+        t.setDescription(null);
+        t.setCategoryId(null); // ako dodaš categoryId u occurrence — mapiraj ovde
+        t.setWeight(null);
+        t.setImportance(null);
+        t.setXpValue(Math.max(0, oc.getXp()));
+        t.setExecutionTime(oc.getWhen());
+        t.setIsRepeating(false); // prikazuje se kao pojedinačna stavka
+        t.setStartDate(oc.getWhen());
+        t.setEndDate(null);
+        t.setRepeatInterval(null);
+        t.setRepeatUnit(null);
+        t.setIsCompleted(oc.isCompleted());
+        t.setCreationTimestamp(oc.getCreatedAt());
+        t.setLastCompletionTimestamp(oc.getCompletedAt());
+        t.setStatus(oc.getStatus() != null ? oc.getStatus() : TaskStatus.AKTIVAN);
+        return t;
+    }
 
     private void applyLocalStatus(String taskId, TaskStatus st, boolean completed) {
         boolean remove = (st == TaskStatus.OTKAZAN || st == TaskStatus.URADJEN);
