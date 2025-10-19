@@ -26,7 +26,6 @@ public class TaskRepository {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         TaskCompletionSource<DocumentReference> tcs = new TaskCompletionSource<>();
 
-        // Kreiraj unapred ID da bi task.setId imao smisla
         DocumentReference docRef = db.collection("tasks").document();
         task.setId(docRef.getId());
 
@@ -81,10 +80,6 @@ public class TaskRepository {
         return tcs.getTask();
     }
 
-    /**
-     * ⚠️ Ne koristi za formu za izmenu jer prepisuje ceo dokument.
-     * Zadržavam zbog kompatibilnosti, ali preferiraj updateFields().
-     */
     public static com.google.android.gms.tasks.Task<Void> update(Task task) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -103,36 +98,12 @@ public class TaskRepository {
                 });
     }
 
-    /**
-     * ✅ Preporučeno za edit: parcijalni update samo promenjenih polja.
-     */
     public static com.google.android.gms.tasks.Task<Void> updateFields(
             @NonNull String taskId,
             @NonNull Map<String, Object> updates
     ) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         return db.collection("tasks").document(taskId).update(updates);
-    }
-
-    public static com.google.android.gms.tasks.Task<Void> updateStatus(
-            @NonNull String taskId,
-            @NonNull String status,
-            boolean isCompleted
-    ) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("status", status);
-        updates.put("isCompleted", isCompleted);
-        return db.collection("tasks").document(taskId).update(updates);
-    }
-
-    public static com.google.android.gms.tasks.Task<Void> updateCompletionStatus(String taskId, boolean isCompleted) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        return db.collection("tasks").document(taskId)
-                .update("isCompleted", isCompleted)
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "Completion status updated for: " + taskId))
-                .addOnFailureListener(e -> Log.e(TAG, "Error updating completion status: " + taskId, e));
     }
 
     public static com.google.android.gms.tasks.Task<Void> delete(String taskId) {

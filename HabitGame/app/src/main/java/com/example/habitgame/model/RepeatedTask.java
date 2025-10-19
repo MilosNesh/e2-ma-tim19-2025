@@ -12,24 +12,22 @@ public class RepeatedTask {
     private String weight;
     private String importance;
 
-    private Long startDate;        // 00:00
-    private Long endDate;          // 00:00
+    private Long startDate;
+    private Long endDate;
 
-    private Integer repeatInterval; // 1..7
-    private String  repeatUnit;     // "day" | "week"
+    private Integer repeatInterval;
+    private String  repeatUnit;
 
-    // UMESTO 'paused' koristimo TaskStatus
-    private TaskStatus status;      // AKTIVAN | PAUZIRAN | ...
+    private TaskStatus status;
 
-    private Integer xpPerOccurrence;  // opcionalno
-    private Integer xpTotal;          // ako je null, računa se iz weight+importance
-    private String  xpSplitStrategy;  // "SPLIT_OVER_SERIES" (default)
+    private Integer xpPerOccurrence;
+    private Integer xpTotal;
+    private String  xpSplitStrategy;
 
     private Long createdAt;
 
     public RepeatedTask(){}
 
-    // ---- get/set ----
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -78,7 +76,6 @@ public class RepeatedTask {
     public Long getCreatedAt() { return createdAt; }
     public void setCreatedAt(Long createdAt) { this.createdAt = createdAt; }
 
-    // helper za normalizaciju jedinice
     public static String normUnit(String unit){
         if (unit == null) return "day";
         unit = unit.toLowerCase(java.util.Locale.ROOT).trim();

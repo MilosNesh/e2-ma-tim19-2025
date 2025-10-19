@@ -2,27 +2,26 @@ package com.example.habitgame.model;
 
 public class RepeatedTaskOccurence {
 
-    private String id;                // subcollection/doc id
-    private String repeatedTaskId;    // parent series id
+    private String id;
+    private String repeatedTaskId;
     private String userId;
 
-    private String taskName;          // SNAPSHOT imena
-    private String taskDescription;   // SNAPSHOT opisa (novo)
-    private String categoryId;        // SNAPSHOT kategorije (novo)
+    private String taskName;
+    private String taskDescription;
+    private String categoryId;
     private boolean seriesPaused;
 
-    private Long when;                // datum pojave (00:00 tog dana)
-    private TaskStatus status;        // AKTIVAN | URADJEN | OTKAZAN | NEURADJEN
+    private Long when;
+    private TaskStatus status;
     private boolean isCompleted;
     private Long completedAt;
 
-    private int xp;                   // XP ove konkretne pojave (snapshot)
+    private int xp;
 
     private Long createdAt;
 
     public RepeatedTaskOccurence(){}
 
-    // --- get/set ---
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

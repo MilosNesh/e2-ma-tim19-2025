@@ -93,9 +93,6 @@ public class CategoryService {
         }
         return CategoryRepository.delete(categoryId);
     }
-
-    // ——— helpers ———
-
     private static String normalizeHex(String hex) {
         if (hex == null) return "";
         hex = hex.trim();
