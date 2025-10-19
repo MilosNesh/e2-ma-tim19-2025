@@ -18,13 +18,6 @@ import java.util.List;
 public class AccountService {
     private AccountRepository accountRepository;
 
-    public static class LevelUpResult {
-        public final boolean leveledUp;
-        public final int oldLevel;
-        public final int newLevel;
-        public LevelUpResult(boolean up, int oldL, int newL) { leveledUp = up; oldLevel = oldL; newLevel = newL; }
-    }
-
     public AccountService(){
         accountRepository = new AccountRepository();
     }
