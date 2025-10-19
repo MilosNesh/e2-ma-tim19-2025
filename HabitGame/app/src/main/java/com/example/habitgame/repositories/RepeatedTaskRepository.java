@@ -19,7 +19,6 @@ public class RepeatedTaskRepository {
 
     private static final String COLL = "repeatedTasks";
 
-    // ===== CREATE =====
     public static Task<DocumentReference> insert(@NonNull RepeatedTask rt){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -42,7 +41,6 @@ public class RepeatedTaskRepository {
         return tcs.getTask();
     }
 
-    // ===== READ =====
     public static Task<RepeatedTask> getById(@NonNull String seriesId){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         TaskCompletionSource<RepeatedTask> tcs = new TaskCompletionSource<>();
@@ -57,48 +55,20 @@ public class RepeatedTaskRepository {
         return tcs.getTask();
     }
 
-    // ===== UPDATE (single-field helpers) =====
-    /** Postavi status serije (AKTIVAN/PAUZIRAN/...). */
     public static Task<Void> setStatus(@NonNull String seriesId, @NonNull TaskStatus status){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         Map<String,Object> up = new HashMap<>();
         up.put("status", status.name());
         return db.collection(COLL).document(seriesId).update(up);
     }
-
-    /** Pauziraj/aktiviraj seriju: upisuje paused + status; ako doc ne postoji → fallback na pojave. */
-    public static Task<Void> setPaused(@NonNull String seriesId, boolean paused){
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        Map<String,Object> up = new HashMap<>();
-        up.put("paused", paused);
-        up.put("status", paused ? TaskStatus.PAUZIRAN.name() : TaskStatus.AKTIVAN.name());
-
-        return db.collection(COLL).document(seriesId)
-                .update(up)
-                .continueWithTask(task -> {
-                    if (task.isSuccessful()) return Tasks.forResult(null);
-                    // Fallback kad doc ne postoji: označi buduće pojave flagom seriesPaused
-                    return RepeatedTaskOccurrenceRepository.markSeriesPausedForFuture(seriesId, paused);
-                });
-    }
-
-    /** Izmena imena/opisa na seriji. */
     public static Task<Void> updateNameDesc(@NonNull String seriesId,
                                             @NonNull String name,
                                             @Nullable String desc){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         Map<String,Object> up = new HashMap<>();
         up.put("name", name);
-        // čuvamo null kao null (ako želiš brisanje polja može FieldValue.delete())
         up.put("description", (desc == null || desc.trim().isEmpty()) ? null : desc.trim());
         return db.collection(COLL).document(seriesId).update(up);
     }
 
-    /** Generičan partial update nad serijom. */
-    public static Task<Void> updateFields(@NonNull String seriesId,
-                                          @NonNull Map<String, Object> fields){
-        if (fields.isEmpty()) return Tasks.forResult(null);
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        return db.collection(COLL).document(seriesId).update(fields);
-    }
 }

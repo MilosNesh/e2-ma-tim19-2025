@@ -88,11 +88,9 @@ public class RepeatedTaskOccurrenceItemAdapter
         h.tvStatus.setText(getStatusLabel(h, status));
         h.tvStatus.setTextColor(getStatusColor(status));
 
-        // Klik – otvori detalje (bottom sheet)
         h.itemView.setOnClickListener(v -> listener.onOpenDetails(o));
         h.btnMore.setOnClickListener(v -> listener.onOpenDetails(o));
 
-        // Done/Cancel samo kad je AKTIVAN
         setEnabled(h.btnDone,   false);
         setEnabled(h.btnCancel, false);
         if (status == TaskStatus.AKTIVAN) {
@@ -102,7 +100,6 @@ public class RepeatedTaskOccurrenceItemAdapter
         h.btnDone.setOnClickListener(v -> listener.onDone(o));
         h.btnCancel.setOnClickListener(v -> listener.onCancel(o));
 
-        // Pauza/Aktiviraj se rade na nivou serije – sakrij
         h.btnPause.setVisibility(View.GONE);
         h.btnActive.setVisibility(View.GONE);
     }

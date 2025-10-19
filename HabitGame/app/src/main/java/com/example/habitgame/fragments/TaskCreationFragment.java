@@ -1,5 +1,7 @@
 package com.example.habitgame.fragments;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -11,7 +13,9 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.habitgame.R;
+import com.example.habitgame.model.Account;
 import com.example.habitgame.model.Category;
+import com.example.habitgame.services.AccountService;
 import com.example.habitgame.services.CategoryService;
 import com.example.habitgame.services.TaskService;
 import com.example.habitgame.utils.XpCalculator;
@@ -30,6 +34,8 @@ public class TaskCreationFragment extends Fragment {
     private List<Category> categories = new ArrayList<>();
     private Long pickedDateMs = null;
 
+    private int currentUserLevel = 1;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -41,7 +47,6 @@ public class TaskCreationFragment extends Fragment {
         spinnerWeight = v.findViewById(R.id.spinner_weight);
         spinnerImportance = v.findViewById(R.id.spinner_importance);
 
-        // sakrij ponavljajuće elemente iz layouta (ako su ostali u XML-u)
         View repeatSection = v.findViewById(R.id.repeat_section);
         View oneTimeSection = v.findViewById(R.id.one_time_section);
         if (repeatSection != null) repeatSection.setVisibility(View.GONE);
@@ -52,6 +57,7 @@ public class TaskCreationFragment extends Fragment {
 
         populateStaticSpinners();
         loadCategories();
+        loadCurrentUserLevel();
 
         btnPickDate.setOnClickListener(x -> pickDate(ms -> {
             pickedDateMs = ms;
@@ -61,6 +67,29 @@ public class TaskCreationFragment extends Fragment {
         btnCreateTask.setOnClickListener(vw -> attemptCreateTask());
 
         return v;
+    }
+
+    private void loadCurrentUserLevel() {
+        try {
+            SharedPreferences sp = requireContext().getSharedPreferences("HabitGamePrefs", Context.MODE_PRIVATE);
+            String email = sp.getString("email", null);
+            if (email == null || email.trim().isEmpty()) {
+                currentUserLevel = 1;
+                return;
+            }
+            new AccountService().getAccountByEmail(email, new com.example.habitgame.model.AccountCallback() {
+                @Override public void onResult(Account acc) {
+                    if (acc != null) currentUserLevel = Math.max(1, acc.getLevel());
+                }
+                @Override public void onFailure(Exception e) {
+                    Log.e(TAG, "loadCurrentUserLevel fail", e);
+                    currentUserLevel = 1;
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "loadCurrentUserLevel ex", e);
+            currentUserLevel = 1;
+        }
     }
 
     private void populateStaticSpinners() {
@@ -114,14 +143,15 @@ public class TaskCreationFragment extends Fragment {
         Category cat = categories.get(spinnerCategory.getSelectedItemPosition());
         String weight = (String) spinnerWeight.getSelectedItem();
         String importance = (String) spinnerImportance.getSelectedItem();
-        int xpValue = XpCalculator.calculateTotalXp(weight, importance);
+
+        int xpValue = XpCalculator.calculateTotalXp(weight, importance, currentUserLevel);
 
         new TaskService()
                 .createTask(
                         name, description, cat.getId(),
                         weight, importance, xpValue,
-                        pickedDateMs, // executionDate
-                        false, null, null, null, null // force one-time
+                        pickedDateMs,
+                        false, null, null, null, null
                 )
                 .addOnSuccessListener(docRef -> {
                     Toast.makeText(getContext(), getString(R.string.create_task), Toast.LENGTH_LONG).show();
@@ -131,7 +161,6 @@ public class TaskCreationFragment extends Fragment {
                         Toast.makeText(getContext(), "Greška: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
-    // ---------- helpers ----------
 
     private interface OnDatePicked { void onPicked(long midnightMs); }
 

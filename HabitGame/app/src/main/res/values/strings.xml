@@ -138,7 +138,11 @@
     <string name="status_missed">NEURADJEN</string>
     <string name="odaberi_datum_zavrsetka">Odaberi datum završetka (opciono)</string>
     <string name="not_implemented">Nije implementirano</string>
-
+    <string name="boss">Boss</string>
+    <string name="pp_s">PP: %1$d</string>
+    <string name="attempts_s">Pokušaji: %1$d/5</string>
+    <string name="success_s">Šansa: %1$d%%</string>
+    <string name="rewards_hint">Moguće nagrade: novčići i oprema</string>
 
 
 </resources>

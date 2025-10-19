@@ -59,7 +59,6 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
 
         load();
 
-        // opcioni lokalni refresh sa drugih ekrana
         getParentFragmentManager().setFragmentResultListener("taskStatusChanged", this, (key, res) -> {
             String taskId = res.getString("taskId");
             String st = res.getString("newStatus", "AKTIVAN");
@@ -79,12 +78,10 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
         final long to   = addMonths(from, 6);
 
         if (!repeating) {
-            // ——— JEDNOKRATNI ———
             TaskRepository.getTasksForCurrentUser()
                     .addOnSuccessListener(list -> {
                         if (list == null) list = new ArrayList<>();
                         for (Task t : list) {
-                            // auto flip 3-dana na obične
                             taskService.autoFlipOverdueToMissed(t);
 
                             if (!Boolean.TRUE.equals(t.getIsRepeating())) {
@@ -101,7 +98,6 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
                             Toast.makeText(getContext(),"Greška: "+e.getMessage(),Toast.LENGTH_LONG).show());
 
         } else {
-            // ——— PONAVLJAJUĆI → OCCURRENCES ———
             RepeatedTaskOccurrenceRepository.getForCurrentUserBetween(from, to)
                     .addOnSuccessListener(occs -> {
                         if (occs == null) occs = Collections.emptyList();
@@ -144,11 +140,9 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
         forceSubmit();
     }
 
-    // ---- Listener impl ----
 
     @Override public void onOpen(Task t) {
         if (isOccurrenceDisplay(t)) {
-            // otvori detalje pojave
             RepeatedTaskOccurrenceDetailsBottomSheet.newInstance(mapDisplayTaskIdToOccurrence(t))
                     .show(getParentFragmentManager(), "occDetails");
         } else {
@@ -161,19 +155,19 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
             RepeatedTaskOccurence oc = mapDisplayTaskIdToOccurrence(t);
             occService.markDone(oc)
                     .addOnSuccessListener(x -> {
-                        Toast.makeText(getContext(), "✅ +" + oc.getXp() + " XP", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), oc.getXp() + " XP", Toast.LENGTH_SHORT).show();
                         load();
                     })
                     .addOnFailureListener(e ->
-                            Toast.makeText(getContext(), "❌ " + e.getMessage(), Toast.LENGTH_LONG).show());
+                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show());
         } else {
             new TaskService().markDone(t)
                     .addOnSuccessListener(x -> {
-                        Toast.makeText(getContext(), "✅ Označeno kao urađeno.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Označeno kao urađeno.", Toast.LENGTH_SHORT).show();
                         load();
                     })
                     .addOnFailureListener(e ->
-                            Toast.makeText(getContext(), "❌ " + e.getMessage(), Toast.LENGTH_LONG).show());
+                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show());
         }
     }
 
@@ -197,8 +191,6 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
                             Toast.makeText(getContext(), "❌ " + e.getMessage(), Toast.LENGTH_LONG).show());
         }
     }
-
-    // ---- helpers ----
 
     private boolean isOccurrenceDisplay(@NonNull Task t) {
         String id = t.getId();
@@ -224,12 +216,12 @@ public class TaskListFragment extends Fragment implements TaskItemAdapter.Listen
         t.setUserId(oc.getUserId());
         t.setName(oc.getTaskName() != null ? oc.getTaskName() : "Ponavljajući");
         t.setDescription(null);
-        t.setCategoryId(null); // ako dodaš categoryId u occurrence — mapiraj ovde
+        t.setCategoryId(null);
         t.setWeight(null);
         t.setImportance(null);
         t.setXpValue(Math.max(0, oc.getXp()));
         t.setExecutionTime(oc.getWhen());
-        t.setIsRepeating(false); // prikazuje se kao pojedinačna stavka
+        t.setIsRepeating(false);
         t.setStartDate(oc.getWhen());
         t.setEndDate(null);
         t.setRepeatInterval(null);

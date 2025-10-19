@@ -11,8 +11,6 @@ import com.google.firebase.firestore.FieldValue;
 
 import java.util.HashMap;
 import java.util.Map;
-
-/** Status + XP + brisanje pojedinačne pojave. */
 public class RepeatedTaskOccurrenceService {
 
     public com.google.android.gms.tasks.Task<Void> markDone(@NonNull RepeatedTaskOccurence oc) {
@@ -37,7 +35,7 @@ public class RepeatedTaskOccurrenceService {
 
         return RepeatedTaskOccurrenceRepository.updateFields(oc.getId(), up)
                 .onSuccessTask(a -> xp > 0
-                        ? AccountRepository.incrementXpForCurrentUser(xp)
+                        ? AccountRepository.addXpAndCheckLevelUp(xp)  // <<<< ovde
                         : Tasks.forResult(null));
     }
 
@@ -62,7 +60,6 @@ public class RepeatedTaskOccurrenceService {
         return RepeatedTaskOccurrenceRepository.updateFields(oc.getId(), up);
     }
 
-    /** NEW: obriši jednu pojavu (ne dira seriju, ne vraća XP). */
     public com.google.android.gms.tasks.Task<Void> delete(@NonNull RepeatedTaskOccurence oc){
         if (oc.getId() == null || oc.getId().trim().isEmpty()) {
             return Tasks.forException(new IllegalArgumentException("Occurrence ID je prazan."));

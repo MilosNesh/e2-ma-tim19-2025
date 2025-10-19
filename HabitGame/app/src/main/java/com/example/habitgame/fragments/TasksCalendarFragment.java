@@ -21,9 +21,6 @@ import com.example.habitgame.repositories.RepeatedTaskOccurrenceRepository;
 
 import java.util.*;
 
-/**
- * Kombinovano: renderuje i Task i RepeatedTaskOccurrence u WeekView bez dodatnih "event" klasa.
- */
 public class TasksCalendarFragment extends Fragment {
 
     private WeekView weekView;
@@ -51,7 +48,6 @@ public class TasksCalendarFragment extends Fragment {
                 end = (Calendar) start.clone();
                 end.add(Calendar.MINUTE, 60);
 
-                // boja po kategoriji:
                 if (t.getCategoryId() != null) {
                     String hex = categoryColors.get(t.getCategoryId());
                     if (hex != null && hex.matches("^#[0-9A-Fa-f]{6}$")) {
@@ -66,7 +62,6 @@ public class TasksCalendarFragment extends Fragment {
                 start = millisToCal(when);
                 end = (Calendar) start.clone();
                 end.add(Calendar.MINUTE, 60);
-                // boju po kategoriji možeš dodati u Occurrence model (categoryId) i mapirati ovde, ako je imaš
             }
 
             WeekViewEntity.Style style = new WeekViewEntity.Style.Builder()
@@ -89,7 +84,6 @@ public class TasksCalendarFragment extends Fragment {
                 TaskDetailsBottomSheet.newInstance((Task) data)
                         .show(getParentFragmentManager(), "taskDetails");
             } else if (data instanceof RepeatedTaskOccurence) {
-                // Ako već imaš poseban bottom sheet za occurrence — pozovi ga ovde.
                 RepeatedTaskOccurrenceDetailsBottomSheet.newInstance((RepeatedTaskOccurence) data)
                         .show(getParentFragmentManager(), "occDetails");
             }
@@ -111,7 +105,6 @@ public class TasksCalendarFragment extends Fragment {
     }
 
     private void loadDataThenRender() {
-        // 1) Učitaj boje kategorija
         CategoryRepository.getForCurrentUser()
                 .addOnSuccessListener(list -> {
                     categoryColors.clear();
@@ -124,7 +117,6 @@ public class TasksCalendarFragment extends Fragment {
                             }
                         }
                     }
-                    // 2) Učitaj taskove i occurrence pa prikaži
                     loadItems();
                 })
                 .addOnFailureListener(e ->
@@ -140,11 +132,9 @@ public class TasksCalendarFragment extends Fragment {
         long fromMs = from.getTimeInMillis();
         long toMs = to.getTimeInMillis();
 
-        // Tasks:
         TaskRepository.getTasksForCurrentUser()
                 .addOnSuccessListener(list -> {
                     allTasks = (list != null) ? list : new ArrayList<>();
-                    // Filtriraj na raspon, obične i ponavljajuće **osnovu**; instance se u kalendaru crtaju kao “slot” bez ekspanzije
                     List<Object> render = new ArrayList<>();
 
                     for (Task t : allTasks) {
@@ -153,7 +143,6 @@ public class TasksCalendarFragment extends Fragment {
                         if (when >= fromMs && when <= toMs) render.add(t);
                     }
 
-                    // Occurrences:
                     RepeatedTaskOccurrenceRepository.getForCurrentUserBetween(fromMs, toMs)
                             .addOnSuccessListener(occ -> {
                                 allOcc = (occ != null) ? occ : new ArrayList<>();

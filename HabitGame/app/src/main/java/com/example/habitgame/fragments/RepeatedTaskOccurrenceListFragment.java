@@ -41,7 +41,6 @@ public class RepeatedTaskOccurrenceListFragment extends Fragment implements Repe
         adapter = new RepeatedTaskOccurrenceItemAdapter(this);
         rv.setAdapter(adapter);
 
-        // SLUŠAJ REZULTAT IZ BOTTOM SHEETA → čim se pauzira/aktivira, osveži listu
         getChildFragmentManager().setFragmentResultListener(
                 "series_toggle",
                 this,
@@ -99,8 +98,6 @@ public class RepeatedTaskOccurrenceListFragment extends Fragment implements Repe
         long end = e.getTimeInMillis();
         return new long[]{start, end};
     }
-
-    // ===== Listener impl =====
 
     @Override
     public void onOpen(RepeatedTaskOccurence occ) {

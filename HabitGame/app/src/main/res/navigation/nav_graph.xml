@@ -14,6 +14,10 @@
         android:name="com.example.habitgame.fragments.TaskCreationFragment"
         android:label="Kreiraj Zadatak" />
     <fragment
+        android:id="@+id/battleFragment"
+        android:name="com.example.habitgame.fragments.BattleFragment"
+        android:label="Boss borba" />
+    <fragment
         android:id="@+id/repeatedTaskCreationFragment"
         android:name="com.example.habitgame.fragments.RepeatedTaskCreateFragment"
         android:label="Novi ponavljajući zadatak"

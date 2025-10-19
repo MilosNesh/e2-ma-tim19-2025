@@ -35,6 +35,7 @@ import com.example.habitgame.model.Account;
 import com.example.habitgame.model.AccountCallback;
 import com.example.habitgame.model.StringCallback;
 import com.example.habitgame.services.AccountService;
+import com.example.habitgame.utils.BattleNavHelper;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
@@ -144,10 +145,8 @@ public class MainActivity extends AppCompatActivity {
         getFMCToken(email);
         checkActivity(this);
 
-        // Dobijamo informaciju iz Intent-a
         String navigateTo = getIntent().getStringExtra("navigateTo");
 
-        // Ako je "navigateTo" setovano, navigiraj na odgovarajući fragment
         if ("allianceFragment".equals(navigateTo)) {
             NavController navController = Navigation.findNavController(this, R.id.mainContainer);
             navController.navigate(R.id.allianceFragment);
@@ -158,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
             actionBar.setTitle(R.string.messages);
         }
 
-        // 2. Rukovanje klikovima u meniju (logout ručno)
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
 
@@ -254,7 +252,11 @@ public class MainActivity extends AppCompatActivity {
                 actionBar.setTitle(R.string.calendar);
                 drawer.closeDrawers();
                 return true;
-            }
+            } else if ("battleFragment".equals(navigateTo)) {
+            NavController navController = Navigation.findNavController(this, R.id.mainContainer);
+            navController.navigate(R.id.battleFragment);
+            actionBar.setTitle(R.string.boss); // dodaj string resurs ili stavi "Boss Fight"
+        }
 
 
             boolean handled = NavigationUI.onNavDestinationSelected(item, navController);
@@ -266,6 +268,12 @@ public class MainActivity extends AppCompatActivity {
 
 //        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 //        StrictMode.setThreadPolicy(policy);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        BattleNavHelper.checkAndLaunchFromActivity(this);
     }
 
     private void getFMCToken(String email) {

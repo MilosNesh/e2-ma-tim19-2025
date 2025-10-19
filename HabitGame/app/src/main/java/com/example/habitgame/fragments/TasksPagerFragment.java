@@ -20,8 +20,8 @@ public class TasksPagerFragment extends Fragment {
 
         pager.setAdapter(new FragmentStateAdapter(this) {
             @NonNull @Override public Fragment createFragment(int pos) {
-                if (pos == 0) return new TaskListFragment();              // Jednokratni
-                else return new RepeatedTaskOccurrenceListFragment();                 // Pojave ponavljajućih
+                if (pos == 0) return new TaskListFragment();
+                else return new RepeatedTaskOccurrenceListFragment();
             }
             @Override public int getItemCount() { return 2; }
         });

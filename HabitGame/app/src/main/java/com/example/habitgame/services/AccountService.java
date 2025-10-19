@@ -18,9 +18,17 @@ import java.util.List;
 public class AccountService {
     private AccountRepository accountRepository;
 
+    public static class LevelUpResult {
+        public final boolean leveledUp;
+        public final int oldLevel;
+        public final int newLevel;
+        public LevelUpResult(boolean up, int oldL, int newL) { leveledUp = up; oldLevel = oldL; newLevel = newL; }
+    }
+
     public AccountService(){
         accountRepository = new AccountRepository();
     }
+
     public String register(Account account, String confirmPassword, int selectedAvatar){
 
         Integer[] avatars = new Integer[] {
@@ -178,12 +186,6 @@ public class AccountService {
                 });
     }
 
-    public void getAllAccounts(AccountListCallback callback) {
-        AccountRepository.select().addOnSuccessListener(accountList -> {
-            callback.onResult(accountList);
-        });
-    }
-
     public void searchByUSername(String username, AccountListCallback callback) {
         accountRepository.selectByUsernameContains(username).addOnSuccessListener(accountList -> {
             callback.onResult(accountList);
@@ -255,7 +257,6 @@ public class AccountService {
             }
         });
     }
-
     public void update(Account account) {
         AccountRepository.update(account);
     }

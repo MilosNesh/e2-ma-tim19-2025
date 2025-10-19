@@ -74,7 +74,6 @@ public class TaskDetailsBottomSheet extends BottomSheetDialogFragment {
         MaterialButton bEdit  = v.findViewById(R.id.btn_edit);
         MaterialButton bDelete= v.findViewById(R.id.btn_delete);
 
-        // sakrij dugmad za ponavljanje
         v.findViewById(R.id.btn_pause).setVisibility(android.view.View.GONE);
         v.findViewById(R.id.btn_active).setVisibility(android.view.View.GONE);
 

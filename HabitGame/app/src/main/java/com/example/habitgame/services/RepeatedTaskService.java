@@ -21,8 +21,6 @@ import java.util.Locale;
 
 public class RepeatedTaskService {
 
-    // ====== PAUZA / AKTIVACIJA / EDIT ======
-
     public Task<Void> pauseSeries(@NonNull String seriesId){
         return RepeatedTaskRepository.setStatus(seriesId, TaskStatus.PAUZIRAN)
                 .onSuccessTask(v -> RepeatedTaskOccurrenceRepository.updateFutureStatusForSeries(seriesId, TaskStatus.PAUZIRAN));
@@ -40,8 +38,6 @@ public class RepeatedTaskService {
                 .onSuccessTask(v -> RepeatedTaskOccurrenceRepository.updateFutureSnapshotFields(seriesId, name, desc));
     }
 
-    // ====== KREIRANJE SERIJE + GENERISANJE POJAVA ======
-
     public Task<DocumentReference> createSeriesAndGenerate(
             @NonNull String name,
             @Nullable String description,
@@ -51,7 +47,8 @@ public class RepeatedTaskService {
             long startDateMs,
             @Nullable Long endDateMs,
             int repeatInterval,
-            @NonNull String repeatUnit // "day" | "week"
+            @NonNull String repeatUnit,
+            int currentLevel// "day" | "week"
     ){
         String uid = FirebaseAuth.getInstance().getCurrentUser() != null
                 ? FirebaseAuth.getInstance().getCurrentUser().getUid()
@@ -82,8 +79,7 @@ public class RepeatedTaskService {
                     List<Long> dates = generateDates(rt, from, to);
                     List<RepeatedTaskOccurence> occs = new ArrayList<>();
 
-                    // XP po pojavi – SVIMA ISTA VREDNOST (težina + bitnost)
-                    int perOccXp = Math.max(0, XpCalculator.calculateTotalXp(rt.getWeight(), rt.getImportance()));
+                    int perOccXp = Math.max(0, XpCalculator.calculateTotalXp(rt.getWeight(), rt.getImportance(), currentLevel));
 
                     for (long d : dates){
                         RepeatedTaskOccurence o = new RepeatedTaskOccurence();
@@ -106,9 +102,6 @@ public class RepeatedTaskService {
                             .onSuccessTask(v -> Tasks.forResult(docRef));
                 });
     }
-
-    // ===== helpers =====
-
     private static long normalizeMidnight(long ms){
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(ms);

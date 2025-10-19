@@ -123,11 +123,9 @@ public class RepeatedTaskOccurrenceDetailsBottomSheet extends BottomSheetDialogF
         MaterialButton bEdit    = v.findViewById(R.id.btn_edit);
         MaterialButton bDelete  = v.findViewById(R.id.btn_delete);
 
-        // occurrence akcije
         setEnabled(bDone,   status == TaskStatus.AKTIVAN);
         setEnabled(bCancel, status == TaskStatus.AKTIVAN);
 
-        // serijske akcije (pauza/aktivacija)
         boolean canToggleSeries = (status == TaskStatus.AKTIVAN || status == TaskStatus.PAUZIRAN);
         bEdit.setVisibility(View.VISIBLE);
         bPause.setVisibility(View.VISIBLE);
@@ -135,12 +133,11 @@ public class RepeatedTaskOccurrenceDetailsBottomSheet extends BottomSheetDialogF
         setEnabled(bPause, canToggleSeries && status != TaskStatus.PAUZIRAN);
         setEnabled(bActive, canToggleSeries && status != TaskStatus.AKTIVAN);
 
-        // DELETE occurrence — uvek dozvoljeno (briše samo tu instancu)
         bDelete.setVisibility(View.VISIBLE);
         setEnabled(bDelete, true);
 
         bDone.setOnClickListener(x -> occSvc.markDone(oc)
-                .addOnSuccessListener(a -> { Toast.makeText(getContext(), "✅ +" + oc.getXp() + " XP", Toast.LENGTH_SHORT).show(); sendResult(); dismiss(); })
+                .addOnSuccessListener(a -> { Toast.makeText(getContext(), oc.getXp() + " XP", Toast.LENGTH_SHORT).show(); sendResult(); dismiss(); })
                 .addOnFailureListener(e -> Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show()));
 
         bCancel.setOnClickListener(x -> occSvc.markCanceled(oc)
@@ -149,7 +146,7 @@ public class RepeatedTaskOccurrenceDetailsBottomSheet extends BottomSheetDialogF
 
         bPause.setOnClickListener(x -> {
             if (sid == null) { Toast.makeText(getContext(), "Nema ID serije.", Toast.LENGTH_LONG).show(); return; }
-            seriesSvc.activateSeries(sid).addOnSuccessListener(a -> {}); // no-op to warm up API
+            seriesSvc.activateSeries(sid).addOnSuccessListener(a -> {});
             seriesSvc.pauseSeries(sid)
                     .addOnSuccessListener(a -> { Toast.makeText(getContext(), "⏸ Serija pauzirana.", Toast.LENGTH_SHORT).show(); sendResult(); dismiss(); })
                     .addOnFailureListener(e -> Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show());
@@ -158,7 +155,7 @@ public class RepeatedTaskOccurrenceDetailsBottomSheet extends BottomSheetDialogF
         bActive.setOnClickListener(x -> {
             if (sid == null) { Toast.makeText(getContext(), "Nema ID serije.", Toast.LENGTH_LONG).show(); return; }
             seriesSvc.activateSeries(sid)
-                    .addOnSuccessListener(a -> { Toast.makeText(getContext(), "▶️ Serija aktivirana.", Toast.LENGTH_SHORT).show(); sendResult(); dismiss(); })
+                    .addOnSuccessListener(a -> { Toast.makeText(getContext(), "Serija aktivirana.", Toast.LENGTH_SHORT).show(); sendResult(); dismiss(); })
                     .addOnFailureListener(e -> Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show());
         });
 

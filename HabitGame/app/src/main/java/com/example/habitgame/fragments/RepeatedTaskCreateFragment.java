@@ -1,5 +1,7 @@
 package com.example.habitgame.fragments;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -12,30 +14,31 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.habitgame.R;
+import com.example.habitgame.model.Account;
 import com.example.habitgame.model.Category;
+import com.example.habitgame.model.AccountCallback;
+import com.example.habitgame.services.AccountService;
 import com.example.habitgame.services.CategoryService;
 import com.example.habitgame.services.RepeatedTaskService;
-import com.example.habitgame.utils.XpCalculator;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/** Kreiranje PONAVLJAJUĆE serije — bez 'seed', generiše sve pojave u [start..end]. */
 public class RepeatedTaskCreateFragment extends Fragment {
 
-    // UI
     private EditText etName, etDesc;
     private Spinner spCategory, spWeight, spImportance, spInterval, spUnit;
     private Button btnPickStart, btnPickEnd, btnCreate;
 
-    // Data
     private final List<Category> categories = new ArrayList<>();
     private Long startMs = null, endMs = null;
 
     private final SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy.", Locale.getDefault());
     private final RepeatedTaskService service = new RepeatedTaskService();
+
+    private int currentUserLevel = 1;
 
     @Nullable @Override
     public View onCreateView(@NonNull LayoutInflater inf, @Nullable ViewGroup c, @Nullable Bundle b) {
@@ -54,11 +57,11 @@ public class RepeatedTaskCreateFragment extends Fragment {
 
         setupStaticSpinners();
         loadCategories();
+        loadCurrentUserLevel(); // <<< učitaj level
 
         btnPickStart.setOnClickListener(x -> pickDate(ms -> {
             startMs = ms;
             btnPickStart.setText(getString(R.string.date) + ": " + df.format(new java.util.Date(ms)));
-            // ako je end < start, resetuj end
             if (endMs != null && endMs < startMs) {
                 endMs = null;
                 btnPickEnd.setText(getString(R.string.odaberi_datum_zavrsetka));
@@ -72,6 +75,28 @@ public class RepeatedTaskCreateFragment extends Fragment {
 
         btnCreate.setOnClickListener(x -> attemptCreate());
         return v;
+    }
+
+
+    private void loadCurrentUserLevel() {
+        try {
+            SharedPreferences sp = requireContext().getSharedPreferences("HabitGamePrefs", Context.MODE_PRIVATE);
+            String email = sp.getString("email", null);
+            if (email == null || email.trim().isEmpty()) {
+                currentUserLevel = 1;
+                return;
+            }
+            new AccountService().getAccountByEmail(email, new AccountCallback() {
+                @Override public void onResult(Account acc) {
+                    if (acc != null) currentUserLevel = Math.max(1, acc.getLevel());
+                }
+                @Override public void onFailure(Exception e) {
+                    currentUserLevel = 1; // fallback
+                }
+            });
+        } catch (Exception ignore) {
+            currentUserLevel = 1;
+        }
     }
 
     private interface OnDatePicked { void onPicked(long midnightMs); }
@@ -99,22 +124,18 @@ public class RepeatedTaskCreateFragment extends Fragment {
     }
 
     private void setupStaticSpinners() {
-        // Težina
         ArrayAdapter<CharSequence> weightAdapter = ArrayAdapter.createFromResource(
                 requireContext(), R.array.xp_weights, android.R.layout.simple_spinner_dropdown_item);
         spWeight.setAdapter(weightAdapter);
 
-        // Bitnost
         ArrayAdapter<CharSequence> importanceAdapter = ArrayAdapter.createFromResource(
                 requireContext(), R.array.xp_importance, android.R.layout.simple_spinner_dropdown_item);
         spImportance.setAdapter(importanceAdapter);
 
-        // Interval (1..7 pretpostavljeno u resursu)
         ArrayAdapter<CharSequence> intervalAdapter = ArrayAdapter.createFromResource(
                 requireContext(), R.array.repeat_intervals, android.R.layout.simple_spinner_dropdown_item);
         spInterval.setAdapter(intervalAdapter);
 
-        // Jedinica ("dan" | "nedelja")
         ArrayAdapter<CharSequence> unitAdapter = ArrayAdapter.createFromResource(
                 requireContext(), R.array.repeat_units, android.R.layout.simple_spinner_dropdown_item);
         spUnit.setAdapter(unitAdapter);
@@ -161,9 +182,8 @@ public class RepeatedTaskCreateFragment extends Fragment {
         Category cat = categories.get(spCategory.getSelectedItemPosition());
         String categoryId = cat.getId();
 
-        String weight = (String) spWeight.getSelectedItem();          // srpski nazivi
-        String importance = (String) spImportance.getSelectedItem();  // srpski nazivi
-
+        String weight = (String) spWeight.getSelectedItem();
+        String importance = (String) spImportance.getSelectedItem();
         String intervalStr = (String) spInterval.getSelectedItem();
         int interval;
         try { interval = Math.max(1, Math.min(7, Integer.parseInt(intervalStr))); }
@@ -171,27 +191,22 @@ public class RepeatedTaskCreateFragment extends Fragment {
             Toast.makeText(getContext(), getString(R.string.repeating), Toast.LENGTH_SHORT).show();
             return;
         }
-
         String unit = (String) spUnit.getSelectedItem(); // "dan" | "nedelja"
 
-        // XP se računa iz težina+bitnost; deli se po pojavi u servisu → šaljemo xpPerOccurrence = null
-        int previewTotalXp = XpCalculator.calculateTotalXp(weight, importance);
-
         service.createSeriesAndGenerate(
-                name,
-                TextUtils.isEmpty(desc) ? null : desc,
-                categoryId,
-                weight,
-                importance,
-                startMs,
-                endMs,
-                interval,
-                unit   // <— NEMA više dodatnog , null
-        )
+                        name,
+                        TextUtils.isEmpty(desc) ? null : desc,
+                        categoryId,
+                        weight,
+                        importance,
+                        startMs,
+                        endMs,
+                        interval,
+                        unit,
+                        currentUserLevel
+                )
                 .addOnSuccessListener(ref -> {
-                    Toast.makeText(getContext(),
-                            getString(R.string.create_task) + " · ukupno XP: " + previewTotalXp,
-                            Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), getString(R.string.create_task), Toast.LENGTH_LONG).show();
                     NavHostFragment.findNavController(this).popBackStack();
                 })
                 .addOnFailureListener(e -> {

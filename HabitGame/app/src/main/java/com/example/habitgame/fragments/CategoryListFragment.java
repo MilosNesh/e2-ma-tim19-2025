@@ -55,11 +55,7 @@ public class CategoryListFragment extends Fragment implements CategoryAdapter.Li
                         .navigate(R.id.categoryCreationFragment)
         );
 
-        // Učitaj (jednokratno) – ili koristi realtime ispod
         loadCategoriesOnce();
-
-        // Ako želiš realtime osvežavanje liste:
-        // startListeningRealtime();
 
         return view;
     }
@@ -88,21 +84,6 @@ public class CategoryListFragment extends Fragment implements CategoryAdapter.Li
             CategoryService.getMyCategories()
                     .addOnSuccessListener(this::render);
         }).show(getParentFragmentManager(), "editCategory");
-    }
-
-
-    private void pickColorAndSave(Category c) {
-        int initial = Color.parseColor(c.getColorHex());
-        new AmbilWarnaDialog(requireContext(), initial, new AmbilWarnaDialog.OnAmbilWarnaListener() {
-            @Override public void onCancel(AmbilWarnaDialog dialog) {}
-            @Override public void onOk(AmbilWarnaDialog dialog, int color) {
-                String hex = String.format("#%06X", (0xFFFFFF & color));
-                if (!hex.equalsIgnoreCase(c.getColorHex())) {
-                    CategoryService.changeCategoryColor(c.getId(), hex)
-                            .addOnFailureListener(e -> Toast.makeText(getContext(),"Greška: "+e.getMessage(),Toast.LENGTH_LONG).show());
-                }
-            }
-        }).show();
     }
 
     @Override public void onDelete(Category c) {

@@ -87,7 +87,6 @@ public class TaskItemAdapter extends ListAdapter<Task, TaskItemAdapter.VH> {
         setEnabled(h.btnDone,   !locked && status == TaskStatus.AKTIVAN);
         setEnabled(h.btnCancel, !locked && status == TaskStatus.AKTIVAN);
 
-        // sakrij ponavljajuće kontrole
         h.btnPause.setVisibility(View.GONE);
         h.btnActive.setVisibility(View.GONE);
     }

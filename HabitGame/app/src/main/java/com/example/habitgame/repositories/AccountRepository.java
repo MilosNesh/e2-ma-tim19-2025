@@ -25,10 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 public class AccountRepository {
-
-    // ------------------------------------------------------------
-    // CREATE
-    // ------------------------------------------------------------
     public static void insert(Account account){
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -51,7 +47,7 @@ public class AccountRepository {
 
                                 account.setIsVerified(false);
                                 account.setRegistrationTimestamp(System.currentTimeMillis());
-                                // obavezno veži uid i piši na docId = uid (nema više auto-ID duplikata)
+
                                 String uid = user.getUid();
                                 Map<String, Object> data = new HashMap<>();
                                 data.put("username", account.getUsername());
@@ -72,6 +68,9 @@ public class AccountRepository {
                                 data.put("allianceId", account.getAllianceId());
                                 data.put("uid", uid);
 
+                                // NOVO: default false
+                                data.put("pendingBoss", account.getPendingBoss() != null ? account.getPendingBoss() : false);
+
                                 db.collection("accounts").document(uid)
                                         .set(data, SetOptions.merge())
                                         .addOnSuccessListener(ref -> {
@@ -84,9 +83,6 @@ public class AccountRepository {
                 });
     }
 
-    // ------------------------------------------------------------
-    // READ helpers
-    // ------------------------------------------------------------
     public static Task<List<Account>> select(){
         TaskCompletionSource<List<Account>> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -108,44 +104,6 @@ public class AccountRepository {
         return tcs.getTask();
     }
 
-    public Task<Account> selectByUsername(String username){
-        TaskCompletionSource<Account> tcs = new TaskCompletionSource<>();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        db.collection("accounts")
-                .whereEqualTo("username", username)
-                .limit(1)
-                .get()
-                .addOnSuccessListener(q -> {
-                    if (!q.isEmpty()) {
-                        Account a = q.getDocuments().get(0).toObject(Account.class);
-                        tcs.setResult(a);
-                    } else {
-                        tcs.setException(new Exception("Nema korisnika sa tim korisničkim imenom."));
-                    }
-                })
-                .addOnFailureListener(tcs::setException);
-        return tcs.getTask();
-    }
-
-    public static Task<Account> getAccountById(String userId) {
-        TaskCompletionSource<Account> tcs = new TaskCompletionSource<>();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        db.collection("accounts").document(userId)
-                .get()
-                .addOnSuccessListener(doc -> {
-                    if (doc.exists()) {
-                        tcs.setResult(doc.toObject(Account.class));
-                    } else {
-                        tcs.setResult(null);
-                    }
-                })
-                .addOnFailureListener(tcs::setException);
-
-        return tcs.getTask();
-    }
-
     public Task<Account> selectByEmail(String email){
         TaskCompletionSource<Account> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -163,23 +121,6 @@ public class AccountRepository {
                 })
                 .addOnFailureListener(tcs::setException);
         return tcs.getTask();
-    }
-
-    // ------------------------------------------------------------
-    // UPDATE / DELETE bulk
-    // ------------------------------------------------------------
-    public static void deleteAll(){
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("accounts")
-                .get()
-                .addOnSuccessListener(q -> {
-                    for (DocumentSnapshot d : q) {
-                        d.getReference().delete()
-                                .addOnSuccessListener(aVoid -> Log.d("REZ_DB","Account "+d.getId()+" deleted."))
-                                .addOnFailureListener(e -> Log.w("REZ_DB","Error deleting account.", e));
-                    }
-                })
-                .addOnFailureListener(e -> Log.w("REZ_DB", "Error fetching accounts.", e));
     }
 
     public static void update(Account account){
@@ -203,6 +144,11 @@ public class AccountRepository {
                         up.put("powerPoints", account.getPowerPoints());
                         up.put("badgeNumbers", account.getBadgeNumbers());
                         up.put("uid", getUid()); // veži uid ako fali
+
+                        if (account.getPendingBoss() != null) {
+                            up.put("pendingBoss", account.getPendingBoss());
+                        }
+
                         ref.update(up)
                                 .addOnSuccessListener(a -> Log.d("REZ_DB","Updated user: "+account.getEmail()))
                                 .addOnFailureListener(e -> Log.w("REZ_DB","Update error: "+account.getEmail(), e));
@@ -335,59 +281,6 @@ public class AccountRepository {
         return tcs.getTask();
     }
 
-    public static Task<Void> updateXp(String userId, int xpEarned) {
-        if (xpEarned <= 0) return Tasks.forResult(null);
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        // prvo probaj docId = uid
-        DocumentReference byUid = db.collection("accounts").document(userId);
-        return byUid.get().continueWithTask(t -> {
-            if (t.isSuccessful() && t.getResult()!=null && t.getResult().exists()
-                    && t.getResult().getData()!=null && t.getResult().getData().size()>5) {
-                // izgleda kao puni dokument
-                return byUid.update("experiencePoints", FieldValue.increment(xpEarned));
-            } else {
-                // nađi glavni dok po email-u
-                String email = getEmail();
-                if (email == null) return Tasks.forException(new IllegalStateException("Nema email-a trenutnog korisnika"));
-                return db.collection("accounts").whereEqualTo("email", email).limit(1).get()
-                        .continueWithTask(q -> {
-                            if (!q.isSuccessful() || q.getResult()==null || q.getResult().isEmpty())
-                                return Tasks.forException(new IllegalStateException("Nalog nije pronađen."));
-                            DocumentReference main = q.getResult().getDocuments().get(0).getReference();
-                            Map<String, Object> up = new HashMap<>();
-                            up.put("experiencePoints", FieldValue.increment(xpEarned));
-                            up.put("uid", userId);
-                            return main.update(up);
-                        });
-            }
-        });
-    }
-
-    // Glavna promena: uvećaj XP na *velikom* dokumentu (po email-u)
-    public static Task<Void> incrementXpForCurrentUser(int deltaXp) {
-        if (deltaXp <= 0) return Tasks.forResult(null);
-
-        String email = getEmail();
-        String uid = getUid();
-        if (email == null) return Tasks.forException(new IllegalStateException("Korisnik nije ulogovan."));
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        return db.collection("accounts").whereEqualTo("email", email).limit(1).get()
-                .continueWithTask(q -> {
-                    if (!q.isSuccessful() || q.getResult()==null || q.getResult().isEmpty())
-                        return Tasks.forException(new IllegalStateException("Nalog nije pronađen po email-u."));
-
-                    DocumentReference main = q.getResult().getDocuments().get(0).getReference();
-                    Map<String,Object> up = new HashMap<>();
-                    up.put("experiencePoints", FieldValue.increment(deltaXp));
-                    if (uid != null) up.put("uid", uid); // dodaj uid ako fali
-                    return main.update(up);
-                })
-                .addOnSuccessListener(a -> Log.d("REZ_DB","XP +"+deltaXp+" na GLAVNOM dokumentu."))
-                .addOnFailureListener(e -> Log.e("REZ_DB","XP increment fail", e));
-    }
-
     public static Task<List<Account>> getByAlliance(String allianceId) {
         TaskCompletionSource<List<Account>> tcs = new TaskCompletionSource<>();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -407,10 +300,6 @@ public class AccountRepository {
 
         return tcs.getTask();
     }
-
-    // ------------------------------------------------------------
-    // Helpers
-    // ------------------------------------------------------------
     @Nullable
     private static String getUid() {
         return FirebaseAuth.getInstance().getCurrentUser() != null
@@ -418,10 +307,78 @@ public class AccountRepository {
                 : null;
     }
 
-    @Nullable
-    private static String getEmail() {
-        return FirebaseAuth.getInstance().getCurrentUser() != null
-                ? FirebaseAuth.getInstance().getCurrentUser().getEmail()
-                : null;
+    public static com.google.android.gms.tasks.Task<Void> addXpAndCheckLevelUp(int deltaXp) {
+        if (deltaXp <= 0) return com.google.android.gms.tasks.Tasks.forResult(null);
+
+        String email = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser()!=null
+                ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getEmail() : null;
+        if (email == null) return com.google.android.gms.tasks.Tasks.forException(new IllegalStateException("Nema ulogovanog korisnika."));
+
+        com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+
+        return db.collection("accounts").whereEqualTo("email", email).limit(1).get()
+                .continueWithTask(q -> {
+                    if (!q.isSuccessful() || q.getResult()==null || q.getResult().isEmpty())
+                        return com.google.android.gms.tasks.Tasks.forException(new IllegalStateException("Nalog nije pronađen."));
+
+                    com.google.firebase.firestore.DocumentSnapshot doc = q.getResult().getDocuments().get(0);
+
+                    int curXp  = doc.getLong("experiencePoints")==null ? 0 : doc.getLong("experiencePoints").intValue();
+                    int curLvl = doc.getLong("level")==null ? 1 : doc.getLong("level").intValue();
+                    int curPP  = doc.getLong("powerPoints")==null ? 0 : doc.getLong("powerPoints").intValue();
+
+                    int newXp = Math.max(0, curXp + deltaXp);
+
+                    int newLevel = com.example.habitgame.utils.LevelUtils.levelFromXp(newXp);
+                    boolean leveledUp = newLevel > curLvl;
+                    int levelUps = Math.max(0, newLevel - curLvl);
+
+                    java.util.Map<String,Object> up = new java.util.HashMap<>();
+                    up.put("experiencePoints", newXp);
+
+                    if (leveledUp) {
+                        up.put("level", newLevel);
+                        up.put("title", com.example.habitgame.utils.LevelUtils.titleForLevel(newLevel));
+                        up.put("pendingBoss", true);
+
+                        int newPP = curPP;
+
+                        if (curLvl < 1 && newLevel >= 1) {
+                            newPP = Math.max(curPP, 40);
+                        }
+
+                        int timesToGrow = 0;
+                        if (newLevel >= 2) {
+                            int from = Math.max(1, curLvl);
+                            int to   = newLevel;
+                            timesToGrow = Math.max(0, to - from);
+                        }
+                        if (timesToGrow > 0) {
+                            newPP = com.example.habitgame.utils.LevelUtils.applyPpGrowth(newPP, timesToGrow);
+                        }
+
+                        up.put("powerPoints", newPP);
+                    }
+
+
+                    return doc.getReference().update(up);
+                });
+    }
+
+    public static Task<Void> setPendingBossForEmail(@NonNull String email, boolean value) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        TaskCompletionSource<Void> tcs = new TaskCompletionSource<>();
+
+        db.collection("accounts").whereEqualTo("email", email).limit(1).get()
+                .addOnSuccessListener(q -> {
+                    if (q.isEmpty()) { tcs.setException(new IllegalStateException("Nalog nije nađen.")); return; }
+                    q.getDocuments().get(0).getReference()
+                            .update("pendingBoss", value)
+                            .addOnSuccessListener(v -> tcs.setResult(null))
+                            .addOnFailureListener(tcs::setException);
+                })
+                .addOnFailureListener(tcs::setException);
+
+        return tcs.getTask();
     }
 }

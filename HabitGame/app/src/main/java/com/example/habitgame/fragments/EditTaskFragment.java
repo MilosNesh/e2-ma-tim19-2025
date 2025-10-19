@@ -34,22 +34,23 @@ public class EditTaskFragment extends Fragment {
     public static final String ARG_NAME          = "name";
     public static final String ARG_DESC          = "desc";
     public static final String ARG_IS_REPEATING  = "isRep";
-    public static final String ARG_EXECUTION_TIME= "execTime";   // jednokratni
-    public static final String ARG_START_DATE    = "startDate";  // ponavljajući
+    public static final String ARG_EXECUTION_TIME= "execTime";
+    public static final String ARG_START_DATE    = "startDate";
     public static final String ARG_STATUS        = "status";
     public static final String ARG_WEIGHT        = "weight";
     public static final String ARG_IMPORTANCE    = "importance";
 
     private TextInputEditText etName, etDesc, etDate;
+    private int currentUserLevel = 1;
     private Spinner spWeight, spImportance;
     private MaterialButton btnPickDate, btnSave, btnCancel;
 
     private String taskId;
     private boolean isRepeating;
     private TaskStatus status;
-    private Long baseWhenMs;       // prikazani datum (bez menjanja vremena)
+    private Long baseWhenMs;
 
-    private final Calendar chosenCal = Calendar.getInstance(); // držimo i vreme, ali vreme ne menjamo kroz UI
+    private final Calendar chosenCal = Calendar.getInstance();
 
     @Nullable
     @Override
@@ -67,7 +68,6 @@ public class EditTaskFragment extends Fragment {
         btnSave = v.findViewById(R.id.btn_save);
         btnCancel = v.findViewById(R.id.btn_cancel);
 
-        // Spinners (za jednokratne)
         ArrayAdapter<CharSequence> wAd = ArrayAdapter.createFromResource(
                 requireContext(), R.array.xp_weights, android.R.layout.simple_spinner_dropdown_item);
         spWeight.setAdapter(wAd);
@@ -77,14 +77,14 @@ public class EditTaskFragment extends Fragment {
 
         readArgsAndFill();
 
-        // Ako je ponavljajući: sakrij sve što nije dozvoljeno (datum i spinnere)
+        loadCurrentUserLevel();
+
         if (isRepeating) {
             v.findViewById(R.id.group_date_row).setVisibility(View.GONE);
             v.findViewById(R.id.group_weight_row).setVisibility(View.GONE);
             v.findViewById(R.id.group_importance_row).setVisibility(View.GONE);
         }
 
-        // Ako je završeni/otkazani: zabrani save
         if (status == TaskStatus.URADJEN || status == TaskStatus.OTKAZAN) {
             btnSave.setEnabled(false);
             Toast.makeText(getContext(), R.string.err_cannot_edit_finished, Toast.LENGTH_LONG).show();
@@ -97,20 +97,34 @@ public class EditTaskFragment extends Fragment {
         return v;
     }
 
+    private void loadCurrentUserLevel() {
+        try {
+            android.content.SharedPreferences sp = requireContext().getSharedPreferences("HabitGamePrefs", android.content.Context.MODE_PRIVATE);
+            String email = sp.getString("email", null);
+            if (email == null || email.trim().isEmpty()) { currentUserLevel = 1; return; }
+            new com.example.habitgame.services.AccountService().getAccountByEmail(email, new com.example.habitgame.model.AccountCallback() {
+                @Override public void onResult(com.example.habitgame.model.Account acc) {
+                    if (acc != null) currentUserLevel = Math.max(1, acc.getLevel());
+                }
+                @Override public void onFailure(Exception e) { currentUserLevel = 1; }
+            });
+        } catch (Exception ignore) {
+            currentUserLevel = 1;
+        }
+    }
+
     private void readArgsAndFill() {
         Bundle a = requireArguments();
 
         taskId      = a.getString(ARG_ID);
         isRepeating = a.getBoolean(ARG_IS_REPEATING, false);
 
-        // status – NEDOSTAJALO ranije
         String st = a.getString(ARG_STATUS, TaskStatus.AKTIVAN.name());
         try { status = TaskStatus.valueOf(st); } catch (Exception e) { status = TaskStatus.AKTIVAN; }
 
         etName.setText(a.getString(ARG_NAME, ""));
         etDesc.setText(a.getString(ARG_DESC, ""));
 
-        // Odredi bazni timestamp (zadržavamo HH:mm postojeće)
         Long exec = a.containsKey(ARG_EXECUTION_TIME) ? a.getLong(ARG_EXECUTION_TIME) : null;
         Long start= a.containsKey(ARG_START_DATE) ? a.getLong(ARG_START_DATE) : null;
         baseWhenMs = (exec != null ? exec : start);
@@ -119,7 +133,6 @@ public class EditTaskFragment extends Fragment {
         chosenCal.setTimeInMillis(DateUtils.ensureMillis(baseWhenMs));
         refreshDateField();
 
-        // postavi spinnere samo za jednokratne
         if (!isRepeating) {
             String w = a.getString(ARG_WEIGHT, null);
             if (w != null) selectSpinner(spWeight, w);
@@ -134,7 +147,6 @@ public class EditTaskFragment extends Fragment {
     }
 
     private void showDatePicker() {
-        // menja se samo datum (NE vreme)
         MaterialDatePicker<Long> dp = MaterialDatePicker.Builder.datePicker()
                 .setTitleText(R.string.pick_date)
                 .setSelection(chosenCal.getTimeInMillis())
@@ -173,22 +185,16 @@ public class EditTaskFragment extends Fragment {
         updates.put("description", desc);
 
         if (!isRepeating) {
-            // jednokratni: dozvoljeno menjati datum (NE vreme), weight & importance
             String weight = (String) spWeight.getSelectedItem();
             String importance = (String) spImportance.getSelectedItem();
 
-            // upiši weight/importance
             updates.put("weight", weight);
             updates.put("importance", importance);
-            // datum (sa zadržanim vremenom)
             updates.put("executionTime", chosenCal.getTimeInMillis());
 
-            // >>> PRERAČUNAJ I UPIŠI XP <<<
-            int newXp = XpCalculator.calculateTotalXp(weight, importance);
+            int newXp = XpCalculator.calculateTotalXp(weight, importance, currentUserLevel);
             updates.put("xpValue", newXp);
         } else {
-            // ponavljajući: menja se samo name/description (sve pojave)
-            // Nema weight/importance ni datuma
         }
 
         TaskRepository.updateFields(taskId, updates)

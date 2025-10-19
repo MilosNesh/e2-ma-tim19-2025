@@ -40,26 +40,21 @@ public class RepeatedTaskEditFragment extends Fragment {
         btnSave = v.findViewById(R.id.btn_save);
         btnCancel = v.findViewById(R.id.btn_cancel);
 
-        // args
         Bundle a = requireArguments();
         seriesId = a.getString(ARG_SERIES_ID, null);
         String nameArg = a.getString(ARG_NAME, "");
         String descArg = a.getString(ARG_DESC, "");
 
-        // inicijalni prikaz (ako su stigli kroz args)
         etName.setText(nameArg == null ? "" : nameArg);
         etDesc.setText(descArg == null ? "" : descArg);
 
-        // Ako opis NIJE prosleđen kroz args, dovuci ga iz baze (real-time iz serije)
         if (TextUtils.isEmpty(descArg) && !TextUtils.isEmpty(seriesId)) {
             RepeatedTaskRepository.getById(seriesId)
                     .addOnSuccessListener(rt -> {
                         if (rt != null) {
-                            // postavi ime (ako je args ime prazno ili staro)
                             if (TextUtils.isEmpty(nameArg)) {
                                 etName.setText(rt.getName() == null ? "" : rt.getName());
                             }
-                            // postavi opis (ispravka tipfelera: rt.getDescription())
                             if (etDesc.getText() != null && TextUtils.isEmpty(etDesc.getText())) {
                                 etDesc.setText(rt.getDescription() == null ? "" : rt.getDescription());
                             }

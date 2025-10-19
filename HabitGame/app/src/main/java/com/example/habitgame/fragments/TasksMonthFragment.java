@@ -47,23 +47,19 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
     private RecyclerView rvDay;
     private TaskItemAdapter dayAdapter;
 
-    /** categoryId -> #RRGGBB */
     private final Map<String, String> categoryColors = new HashMap<>();
 
     private final TaskService taskService = new TaskService();
     private final RepeatedTaskOccurrenceService occService = new RepeatedTaskOccurrenceService();
 
-    /** dan (00:00) -> lista za prikaz */
     private final Map<Long, List<Task>> displayByDay = new HashMap<>();
     private Long selectedDayMs = null;
 
-    // ---- Calendar view holders ----
     private static class DayViewContainer extends ViewContainer {
         final View root;
         final com.google.android.material.card.MaterialCardView card;
         final TextView tvDayNumber;
         final LinearLayout dotRow;
-        // NOVO: opcioni “pause” badge (ako postoji u item_calendar_day.xml)
         final View badgePause;
 
         DayViewContainer(@NonNull View view) {
@@ -72,7 +68,7 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
             card = view.findViewById(R.id.card_root);
             tvDayNumber = view.findViewById(R.id.tv_day_number);
             dotRow = view.findViewById(R.id.dot_row);
-            badgePause = view.findViewById(R.id.badge_pause); // može biti null ako ga nema u layoutu
+            badgePause = view.findViewById(R.id.badge_pause);
         }
     }
     private static class HeaderContainer extends ViewContainer {
@@ -91,7 +87,6 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
         dayAdapter = new TaskItemAdapter(this);
         rvDay.setAdapter(dayAdapter);
 
-        // slušaj rezultat iz bottom-sheeta (pauza/aktivacija/done/cancel) → refresh
         getParentFragmentManager().setFragmentResultListener("series_toggle", this,
                 (reqKey, bundle) -> { if (Boolean.TRUE.equals(bundle.getBoolean("changed"))) loadData(); });
         getParentFragmentManager().setFragmentResultListener("occ_changed", this,
@@ -136,7 +131,6 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
                 c.card.setStrokeColor(isSelected ? Color.BLACK : Color.DKGRAY);
                 c.card.setStrokeWidth(isSelected ? dp(2) : dp(1));
 
-                // tačkice (max 3) – boja kategorije; PAUZIRAN => smanjena alfa
                 c.dotRow.removeAllViews();
                 List<Task> items = displayByDay.getOrDefault(dayMs, Collections.emptyList());
                 int shown = 0;
@@ -157,7 +151,6 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
                     shown++;
                 }
 
-                // NOVO: badge i okvir za pauzu
                 if (!items.isEmpty()) {
                     boolean hasPaused = false;
                     boolean allPaused = true;
@@ -167,22 +160,18 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
                         if (st != TaskStatus.PAUZIRAN) allPaused = false;
                     }
 
-                    // prikaži mali badge ako postoji makar jedan pauziran
                     if (c.badgePause != null) {
                         c.badgePause.setVisibility(hasPaused ? View.VISIBLE : View.GONE);
                         if (hasPaused) {
-                            // narandžasta (isti ton kao u listama)
                             c.badgePause.getBackground().setTint(Color.parseColor("#EF6C00"));
                         }
                     }
 
-                    // ako su SVI tog dana pauzirani → oboji okvir narandžasto
                     if (allPaused) {
                         c.card.setStrokeColor(Color.parseColor("#EF6C00"));
                         c.card.setStrokeWidth(isSelected ? dp(2) : dp(1));
                     }
                 } else {
-                    // nema stavki – sakrij badge ako postoji
                     if (c.badgePause != null) c.badgePause.setVisibility(View.GONE);
                 }
 
@@ -233,7 +222,6 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
                             .addOnSuccessListener(tasks -> {
                                 if (tasks == null) tasks = new ArrayList<>();
 
-                                // jednokratni/bazni taskovi
                                 for (Task t : tasks) {
                                     Long w = (t.getExecutionTime() != null) ? t.getExecutionTime() : t.getStartDate();
                                     if (w == null) continue;
@@ -242,7 +230,6 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
                                     displayByDay.computeIfAbsent(key, k -> new ArrayList<>()).add(t);
                                 }
 
-                                // occurrences
                                 RepeatedTaskOccurrenceRepository.getForCurrentUserBetween(from, to)
                                         .addOnSuccessListener(occList -> {
                                             if (occList != null) {
@@ -330,7 +317,6 @@ public class TasksMonthFragment extends Fragment implements TaskItemAdapter.List
         dayAdapter.submitList(new ArrayList<>(dayList));
     }
 
-    // ---- TaskItemAdapter.Listener ----
     @Override public void onOpen(Task t) {
         if (isOccurrenceDisplay(t)) {
             RepeatedTaskOccurrenceDetailsBottomSheet.newInstance(mapDisplayTaskIdToOccurrence(t))

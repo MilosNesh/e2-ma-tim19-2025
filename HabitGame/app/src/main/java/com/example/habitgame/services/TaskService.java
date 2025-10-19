@@ -21,7 +21,6 @@ public class TaskService {
 
     public TaskService() {}
 
-    // --- pravilo 3 dana unazad ---
     public static boolean shouldBeMarkedMissed(@Nullable Long plannedTimeMs, long nowMs) {
         if (plannedTimeMs == null) return false;
         long limit = nowMs - (3 * ONE_DAY_MS);
@@ -42,8 +41,6 @@ public class TaskService {
         }
         return Tasks.forResult(null);
     }
-
-    // --- statusne akcije (one-time) ---
     public com.google.android.gms.tasks.Task<Void> markDone(@NonNull Task t) {
         TaskStatus cur = t.getStatus()==null? TaskStatus.AKTIVAN : t.getStatus();
         if (cur != TaskStatus.AKTIVAN) {
@@ -65,7 +62,7 @@ public class TaskService {
         int xp = Math.max(0, t.getXpValue());
         return TaskRepository.updateFields(t.getId(), up)
                 .onSuccessTask(a -> xp > 0
-                        ? AccountRepository.incrementXpForCurrentUser(xp)
+                        ? AccountRepository.addXpAndCheckLevelUp(xp)
                         : Tasks.forResult(null));
     }
 
@@ -80,7 +77,6 @@ public class TaskService {
         return TaskRepository.updateFields(t.getId(), up);
     }
 
-    // --- kreiranje (one-time) ---
     public com.google.android.gms.tasks.Task<DocumentReference> createTask(
             String name, String description, String categoryId,
             String weight, String importance, int xpValue, Long executionDate,
@@ -99,8 +95,8 @@ public class TaskService {
                 weight,
                 importance,
                 xpValue,
-                executionDate,   // 00:00 tog dana
-                false,           // uvijek one-time
+                executionDate,
+                false,
                 null, null, null, null,
                 System.currentTimeMillis()
         );
@@ -111,7 +107,6 @@ public class TaskService {
         return TaskRepository.insert(task);
     }
 
-    // --- fetch / delete ---
     public com.google.android.gms.tasks.Task<List<Task>> getTasksForCurrentUser() {
         return TaskRepository.getTasksForCurrentUser();
     }

@@ -17,9 +17,12 @@ public class Account {
     private List<Equipment> equipments;
     private boolean isVerified;
     private long registrationTimestamp;
+    private boolean pendingBoss;
     private List<String> friends;
     private String fcmToken;
     private String allianceId;
+    private long lastLevelUpTimestamp;
+
     public Account(){
     }
 
@@ -36,8 +39,20 @@ public class Account {
         this.title = "Pocetnik";
         this.equipments = new ArrayList<>();
         this.friends = new ArrayList<>();
+        this.pendingBoss = false;
         this.allianceId = "";
     }
+
+    public long getLastLevelUpTimestamp() {
+        return lastLevelUpTimestamp;
+    }
+
+    public void setLastLevelUpTimestamp(long lastLevelUpTimestamp) {
+        this.lastLevelUpTimestamp = lastLevelUpTimestamp;
+    }
+
+    public Boolean getPendingBoss() { return pendingBoss; }
+    public void setPendingBoss(boolean pendingBoss) { this.pendingBoss = pendingBoss; }
 
     public String getUsername() {
         return username;
@@ -178,7 +193,7 @@ public class Account {
     public int countPP() {
         int pp = 40;
         for(int i = 0; i<level; i++){
-            pp = pp + 3/4*pp;
+            pp = pp + (pp * 3) / 4;
         }
         return pp;
     }
@@ -189,6 +204,8 @@ public class Account {
             case 2: title = "Medior Vitez"; break;
             case 3: title = "Senior Vitez"; break;
             case 4: title = "Master Vitez"; break;
+            case 5: title = "Elitni Vitez"; break;
+            case 6: title = "Kralj Artur"; break;
             default: title = "Noob";
         }
     }

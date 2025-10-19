@@ -2,11 +2,10 @@ package com.example.habitgame.utils;
 
 public class XpCalculator {
 
-    public static int calculateTotalXp(String weight, String importance) {
-        int weightXp = getWeightXp(weight);
-        int importanceXp = getImportanceXp(importance);
-
-        return weightXp + importanceXp;
+    public static int calculateTotalXp(String weight, String importance, int currentLevel) {
+        int base = getWeightXp(weight) + getImportanceXp(importance);
+        double mult = Math.pow(1.5, Math.max(0, currentLevel - 1));
+        return (int)Math.round(base * mult);
     }
 
     private static int getWeightXp(String weight) {
